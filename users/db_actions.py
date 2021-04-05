@@ -1,5 +1,7 @@
 from users.models import CustomUser
+import logging
 
+logger = logging.getLogger("Metrica_logger")
 
 def get_username_by_id(id: int):
     """
@@ -35,9 +37,9 @@ def get_user_id_by_name(name):
 def add_user_into_db_simple(username):
     user = CustomUser.objects.get_or_create(username=username)
     if user[1]:
-        print(f'New user "{username}" added to db. WELCOME!')
+        logger.info(f'New user "{username}" added to db. WELCOME!')
         return user[0].pk
-    print(f'User "{username}" already in db. Welcome back!')
+    logger.info(f'User "{username}" already in db. Welcome back!')
     return
 
 
@@ -51,7 +53,7 @@ def add_user_into_db_from_score_pairs(score_pairs: dict):
         user = CustomUser.objects.get_or_create(username=username)
         users_id_list.append(user[0].pk)
         if user[1]:
-            print(f'{username} added to DB')
+            logger.info(f'{username} added to DB')
         else:
-            print(f'{username} already in DB')
+            logger.info(f'{username} already in DB')
     return users_id_list

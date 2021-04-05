@@ -14,9 +14,10 @@ import imghdr
 import django.core.files.uploadedfile
 from games.utils import get_default_cover
 from dotenv import load_dotenv, find_dotenv
+import logging
 
 load_dotenv(find_dotenv())
-
+logger = logging.getLogger("Metrica_logger")
 
 def get_game_id_by_name(name):
     """
@@ -93,10 +94,9 @@ def add_game_into_db_single_from_bot(name, cover=None):
                 return game
 
         elif imghdr.what('', file_bytes) is None:
-            print(
-                "NON-image file cannot be processed. "
-                "In case with new game - it will be saved without cover_art"
-            )
+            logger.info("NON-image file cannot be processed. "
+                "In case with new game - it will be saved without cover_art")
+
             game = Games.objects.create(name=name, cover_art=default_cover_path_for_field)
             return game
 

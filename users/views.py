@@ -20,6 +20,7 @@ from django.core.mail import send_mail
 from django.contrib import messages
 from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv())
 URL_PATH = 'https://a-metrica.herokuapp.com'
 
 

@@ -191,4 +191,38 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Debug toolbar will be available for requests from this IPs
 INTERNAL_IPS = [
     '127.0.0.1',
-]
+    ]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "{levelname} | {module} | {message}",
+            "style": "{"
+        },
+        "verbose": {
+            "format": "{levelname} | {asctime} | {module} | {process:d} | {thread:d} | {message}",
+            "style": "{"
+        },
+    },
+    'handlers': {
+        'console_info': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file_debug': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': f'{BASE_DIR}\\warning.log',
+            'formatter': 'verbose'
+        },
+    },
+    "loggers": {
+        "Metrica_logger": {
+            "handlers": ["console_info", "file_debug",],
+            "level": "DEBUG",
+        },
+    }
+}

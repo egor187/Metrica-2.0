@@ -15,9 +15,11 @@ from django.views.decorators.csrf import csrf_exempt
 from Metrica_project.stats_bot import StatsBot
 from django.db.models import Sum
 from games.filter import GamesFilter
+import logging
 
 stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
 stats_bot = StatsBot(stats_bot_token)
+logger = logging.getLogger("Metrica_logger")
 
 
 @csrf_exempt
@@ -87,11 +89,10 @@ class GamesAddBotView(View):
         try:
             avatar = request.FILES["avatar"]
         except MultiValueDictKeyError as e:
-            print("No image for cover provided. Apply default cover for case 'new game'")
+            logger.info("No image for cover provided. Apply default cover for case 'new game'")
             result = add_game_into_db_single_from_bot(game_name)
         else:
             result = add_game_into_db_single_from_bot(game_name, avatar)
-
         return HttpResponse(result)
 
 

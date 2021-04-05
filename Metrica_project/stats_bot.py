@@ -11,8 +11,8 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 import logging
-
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('Metrica_logger')
 
 USER_REGISTRATION_URL = os.getenv('USER_REGISTRATION_URL')
 ADD_GAME_URL = os.getenv('ADD_GAME_URL')
@@ -36,10 +36,9 @@ class StatsBot:
 
     def process_update(self, request):
         update = Update.de_json(request, self.bot)
-        print('Update decoded', update.update_id)
+        logger.debug(f'Update decoded: {update.update_id}')
         self.dispatcher.process_update(update)
-        print('Stats request processed successfully', update.update_id)
-
+        logger.debug(f'Stats request processed successfully: {update.update_id}')
 
 def add_game_command(update, context):
     context.user_data["last_command"] = "GAME"
@@ -175,7 +174,6 @@ def game_cover(update, context):
     photo = update.message.photo[-1].get_file()
     requests.post(ADD_GAME_URL, data={'game_name': game_name}, files={'avatar': photo.download_as_bytearray()})
     update.message.reply_text(f'New game "{game_name}" added to Metrica!')
-
     return ConversationHandler.END
 
 
