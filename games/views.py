@@ -3,23 +3,18 @@ import json
 from games.models import Games, GameSession, GameScores
 from games.forms import GameCreationForm
 from users.models import CustomUser
-from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
 from django.views.generic import DetailView
 from django.utils.decorators import method_decorator
 from django.utils.datastructures import MultiValueDictKeyError
-from django.views.generic.edit import CreateView, UpdateView
-from games.db_actions import get_game_id_by_name, get_game_object_by_id, \
-    add_game_into_db, add_game_into_db_single_from_bot, add_game_session_into_db, add_scores
+from django.views.generic.edit import CreateView
+from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
 from django.views.decorators.csrf import csrf_exempt
 from Metrica_project.stats_bot import StatsBot
 from django.db.models import Sum
 from games.filter import GamesFilter
-from PIL import Image
-from io import BytesIO
-import base64
 
 stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
 stats_bot = StatsBot(stats_bot_token)
@@ -96,7 +91,14 @@ class GamesAddBotView(View):
             result = add_game_into_db_single_from_bot(game_name)
         else:
             result = add_game_into_db_single_from_bot(game_name, avatar)
-        new_game_msg = f'New game "{game_name}" added to Metrica!'
-        exist_game_msg = f'Game "{game_name}" already tracking by Metrica!'
 
-        return HttpResponse(new_game_msg if result else exist_game_msg)
+        return HttpResponse(result)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class GameCheck(View):
+    def get(self, request):
+        game_name = request.GET.get("game_name")
+        result = {"exist_game": get_game_id_by_name(game_name)}
+
+        return JsonResponse(result)
