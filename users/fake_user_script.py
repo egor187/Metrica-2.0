@@ -32,13 +32,14 @@ def fake_users(iteration):
         username = fake.user_name()
         first_name = fake.first_name()
         last_name = fake.last_name()
+        email = fake.ascii_email()
         avatar_file_name = username + first_name + last_name + '.jpg'
         avatar_file_path = 'uploads\\' + avatar_file_name
 
         create_random_image_file(avatar_file_path)
 
         CustomUser.objects.create_user(username=username, first_name=first_name,
-                                       last_name=last_name, password='123456', email=fake.ascii_email(),
+                                       last_name=last_name, password='123456', email=email,
                                        avatar=avatar_file_path)
         print(username)
     print(f'{iteration} fake-users are created')
