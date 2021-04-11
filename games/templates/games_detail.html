@@ -60,6 +60,7 @@
             <th scope="col">#</th>
             <th scope="col">Game</th>
             <th scope="col">Players</th>
+            <th scope="col">Played games</th>
             <th scope="col">Summary</th>
         </tr>
         </thead>
@@ -71,8 +72,15 @@
             </td>
             <td>
                 <ul class="list-unstyled">
-                    {% for user in users %}
-                        <li>{{ user.name }}</li>
+                    {% for user in played_games_by_players %}
+                        <li>{{ user }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul class="list-unstyled">
+                    {% for user in played_games_by_players %}
+                        <li>{{ user.played_games_count }}</li>
                     {% endfor %}
                 </ul>
             </td>
