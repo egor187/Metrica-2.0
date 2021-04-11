@@ -28,33 +28,52 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Game</th>
-                    <th scope="col">Sessions</th>
+                    {% comment %}<th scope="col">Sessions</th>{% endcomment %}
+                    <th scope="col">Quantity </th>
                     <th scope="col">Players</th>
                     <th scope="col">Scores</th>
                 </tr>
                 </thead>
+
                 <tbody>
-                {% for game_session in filter.qs %}
+                {% for game in filter.qs %}
                     <tr>
-                        <th scope="row">{{ game_session.game.pk }}</th>
+                        <th scope="row">{{ game.pk}}</th>
                         <td>
-                            <a href={% url 'games:games_detail' game_session.game.pk %}>{{ game_session.game.name }}</a>
+                            <a href="{% url 'games:games_detail' game.pk %}">{{ game.name }}</a>
                         </td>
+
+{% comment 'Duplication depend on model' %}
                         <td>
-                            <ul class="list-unstyled">
-                                <li>{{ game_session.created_at }}</li>
-                            </ul>
+                            <ol class="list-unstyled">
+                                {% for session in game.sessions.all %}
+                                    <li>{{ session.created_at }}</li>
+                                {% endfor %}
+                            </ol>
                         </td>
+{% endcomment %}
+
                         <td>
-                            {% for score in game_session.scores.all %}
-                                {{ score.user }}
+                            {{ game.sessions.all.count }}
+                        </td>
+
+
+                        <td>
+                            {% for session in game.sessions.all %}
+                                {% for score in session.scores.all %}
+                                    {{ score.user }}
+                                {% endfor %}
                             {% endfor %}
                         </td>
+
                         <td>
-                            {% for score in game_session.scores.all %}
-                                {{ score.score }}
+                            {% for session in game.sessions.all %}
+                                {% for score in session.scores.all %}
+                                    {{ score.score }},
+                                {% endfor %}
                             {% endfor %}
                         </td>
+
                     </tr>
                 {% endfor %}
                 </tbody>

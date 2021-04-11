@@ -13,8 +13,9 @@ from django.views.generic.edit import CreateView
 from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
 from django.views.decorators.csrf import csrf_exempt
 from Metrica_project.stats_bot import StatsBot
-from django.db.models import Sum
-from games.filter import GamesFilter
+from django.db.models import Sum, Count
+from games.filter import GameFilter
+
 import logging
 
 stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
@@ -38,7 +39,12 @@ class GamesDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        users = CustomUser.objects.distinct().filter(scores__game_session__game__pk=self.kwargs['pk'])
+
+        users = CustomUser.objects.prefetch_related("scores") \
+            .filter(scores__game_session__game__id=self.kwargs["pk"]) \
+            .annotate(played_games_count=Count("scores__game_session"))
+
+        context['played_games_by_players'] = users
 
         users_with_scores = list(map(lambda user: dict(name=user.username,
                                                        score=GameScores.objects.filter(
@@ -52,6 +58,9 @@ class GamesDetailView(DetailView):
             "users": users_with_scores
         }
 
+        # Аннотация количества сыгранных сессий для каждой игры для каждого юзера
+        # CustomUser.objects.annotate(played_games_count=Count("scores__game_session"))
+
         return context
 
 
@@ -61,17 +70,27 @@ class GamesListView(ListView):
     context_object_name = 'games'
 
     def get_context_data(self, *, object_list=None, **kwargs):
-
         context = super().get_context_data()
-        context["filter"] = GamesFilter(
+        context["filter"] = GameFilter(
             self.request.GET)
+
+        for game in Games.objects.all():
+            context[game.name] = CustomUser.objects.filter(scores__game_session__game__name=game.name).distinct()
 
         if self.request.user.is_authenticated:
             if self.request.GET.get('self_game_sessions') == "on":
-                context['filter'] = GamesFilter(
+                context['filter'] = GameFilter(
                     self.request.GET,
-                    queryset=GameSession.objects.filter(scores__user=self.request.user)
+                    queryset=Games.objects.filter(sessions__scores__user=self.request.user).distinct()
                 )
+
+        # Realization with sessions in filter
+        # if self.request.user.is_authenticated:
+        #     if self.request.GET.get('self_game_sessions') == "on":
+        #         context['filter'] = GamesFilter(
+        #             self.request.GET,
+        #             queryset=GameSession.objects.filter(scores__user=self.request.user)
+        #         )
 
         return context
 

@@ -1,24 +1,25 @@
 import os
 from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, UpdateView
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 import users.models
-from games.models import Games, GameScores, GameSession
+from games.models import Games, GameSession
+from django.db.models.functions import ExtractIsoWeekDay
+from django.db.models import Sum
 from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm
-from django.contrib import messages
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.decorators.csrf import  csrf_exempt
 from users.db_actions import add_user_into_db_simple
 import json
 from django.core import serializers
 from django.core.mail import send_mail
 from django.contrib import messages
 from dotenv import load_dotenv, find_dotenv
+from users.utils import get_player_calendar
 
 load_dotenv(find_dotenv())
 URL_PATH = 'https://a-metrica.herokuapp.com'
@@ -47,20 +48,6 @@ class UsersListView(ListView):
     template_name = 'users_index.html'
     context_object_name = 'users_list'
 
-    # OPTIONAL
-    # def get_queryset(self):
-    #     """
-    #     OPTIONAL
-    #     Override parent method to get custom queryset by filtering
-    #     .objects.all() by named param "pk", which send by url_dispatcher from
-    #     <int:pk>-part of url. Dispatcher also can send positional param (args).
-    #     In class-based view access to this param from url_dispatcher based on
-    #     "self.kwargs" or "self.args"
-    #     :return: new filtered queryset
-    #     """
-    #     queryset = CustomUser.objects.filter(pk=self.kwargs['pk'])
-    #     return queryset
-
 
 class UsersDetailView(LoginRequiredMixin, DetailView):
     model = users.models.CustomUser
@@ -72,7 +59,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         Override parent method to get context data for template (add JSON -
         format data about current user)
         :param kwargs: captured named param from url_disptacher path()
-        :return: additional context var "json" for template rendering
+        :return: additional context for template rendering
         """
         context = super().get_context_data(**kwargs)
         context['json'] = serializers.serialize(
@@ -86,9 +73,18 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
             )
         )
 
-        context["last_five_games_played"] = Games.objects.distinct().filter(
-            sessions__scores__user__id=self.kwargs['pk']
-        )
+        context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(player_score=Sum("sessions__scores__score"))
+
+        context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
+
+        self_game_sessions = GameSession.objects.filter(scores__user__pk=self.kwargs["pk"]).\
+            annotate(weekday=ExtractIsoWeekDay("created_at"))
+
+        context['sessions'] = self_game_sessions
+
+        context["frequency"] = get_player_calendar(self_game_sessions)
 
         return context
 
@@ -125,8 +121,7 @@ def invite_to_register(request):
     return HttpResponseRedirect(reverse_lazy('users:users_register'))
 
 
-# disable csrf protection for testing via Postman by using decorator
-@csrf_exempt
+@csrf_exempt  # disable csrf protection for testing via Postman by using decorator
 def add_user_view(request):
     if request.method == 'POST':
         request_raw = request.body
@@ -138,12 +133,6 @@ def add_user_view(request):
         user = request.GET.get('user')
         new_user_pk = add_user_into_db_simple(user)
 
-    # Another realization:
-    # Return redirect to update_view for created user (in browser)
-    # return HttpResponseRedirect(reverse('users:users_update', args=[new_user_pk]))
-
-    # Return text of link for tg_bot to update user account page
-    # !!Need to add token into link!!
     return HttpResponse(
         URL_PATH + str(
             reverse_lazy(
@@ -210,8 +199,7 @@ def invite_to_register(request):
     return HttpResponseRedirect(reverse_lazy('users:users_register'))
 
 
-# disable csrf protection for testing via Postman by using decorator
-@csrf_exempt
+@csrf_exempt  # disable csrf protection for testing via Postman by using decorator
 def add_user_view(request):
     if request.method == 'POST':
         request_raw = request.body
@@ -223,12 +211,6 @@ def add_user_view(request):
         user = request.GET.get('user')
         new_user_pk = add_user_into_db_simple(user)
 
-    # Another realization:
-    # Return redirect to update_view for created user (in browser)
-    # return HttpResponseRedirect(reverse('users:users_update', args=[new_user_pk]))
-
-    # Return text of link for tg_bot to update user account page
-    # !!Need to add token into link!!
     return HttpResponse(
         URL_PATH + str(
             reverse_lazy(
