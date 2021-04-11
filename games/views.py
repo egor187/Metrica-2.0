@@ -15,6 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from Metrica_project.stats_bot import StatsBot
 from django.db.models import Sum, Count
 from games.filter import GameFilter
+
 import logging
 
 stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
