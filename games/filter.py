@@ -1,5 +1,6 @@
 import django_filters
-from games.models import Games, GameSession
+
+from games.models import Games
 from users.models import CustomUser
 
 

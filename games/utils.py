@@ -1,8 +1,8 @@
-from django.conf import settings
-from datetime import datetime
-import requests
 import os
 import logging
+
+import requests
+
 
 logger = logging.getLogger("Metrica_logger")
 

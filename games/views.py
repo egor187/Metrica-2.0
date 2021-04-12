@@ -1,21 +1,23 @@
 import os
 import json
-from games.models import Games, GameSession, GameScores
-from games.forms import GameCreationForm
-from users.models import CustomUser
+import logging
+
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import ListView
-from django.views.generic import DetailView
+from django.views.generic import ListView, DetailView, CreateView
 from django.utils.decorators import method_decorator
 from django.utils.datastructures import MultiValueDictKeyError
-from django.views.generic.edit import CreateView
-from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
 from django.views.decorators.csrf import csrf_exempt
-from Metrica_project.stats_bot import StatsBot
 from django.db.models import Sum, Count
+
+from games.models import Games, GameScores
+from games.forms import GameCreationForm
+from users.models import CustomUser
+
+from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
+from Metrica_project.stats_bot import StatsBot
 from games.filter import GameFilter
-import logging
+
 
 stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
 stats_bot = StatsBot(stats_bot_token)
@@ -28,7 +30,7 @@ def stats_proceed_view(request):
     stats_bot.process_update(request_json)
 
     # Бот в нашей реализации ничего не ждет от view, а лишь парсит body в json и использует его
-    return HttpResponse()  # view ALWAYS must return response. В этом случае - пустой instance HttpResponse
+    return HttpResponse()  # "view ALWAYS must return response". В этом случае - пустой instance HttpResponse
 
 
 class GamesDetailView(DetailView):

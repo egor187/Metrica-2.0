@@ -1,4 +1,3 @@
-from users.models import CustomUser
 from django.shortcuts import render
 
 

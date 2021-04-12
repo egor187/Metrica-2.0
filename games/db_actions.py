@@ -1,23 +1,26 @@
+import os
+import uuid
+import imghdr
+import logging
 from datetime import datetime
-from django.db.models import Sum
+
 from django.conf import settings
+from django.db.models import Sum
+
+from dotenv import load_dotenv, find_dotenv
+
 from users.models import CustomUser
 from .models import Games, GameScores, GameSession
 from .checkup import negative_score_check
 from users.db_actions import get_username_by_id
 from users.db_actions import add_user_into_db_from_score_pairs
 from users.db_actions import get_user_object_by_id
-import uuid
-import os
-import django.db.utils
-import imghdr
-import django.core.files.uploadedfile
 from games.utils import get_default_cover
-from dotenv import load_dotenv, find_dotenv
-import logging
+
 
 load_dotenv(find_dotenv())
 logger = logging.getLogger("Metrica_logger")
+
 
 def get_game_id_by_name(name):
     """

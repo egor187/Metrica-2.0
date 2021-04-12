@@ -1,5 +1,7 @@
-from users.models import CustomUser
 import logging
+
+from users.models import CustomUser
+
 
 logger = logging.getLogger("Metrica_logger")
 

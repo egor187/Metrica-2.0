@@ -1,7 +1,11 @@
 import os
+
 from django.urls import path
-from games import views
+
 from dotenv import load_dotenv, find_dotenv
+
+from games import views
+
 
 load_dotenv(find_dotenv())
 

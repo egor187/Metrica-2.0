@@ -1,6 +1,7 @@
-from django.test import SimpleTestCase, TestCase, Client
-from games.models import Games
+from django.test import TestCase, Client
 from django.urls import reverse_lazy
+
+from games.models import Games
 
 
 class GamesTestCase(TestCase):

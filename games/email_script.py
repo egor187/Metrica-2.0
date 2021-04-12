@@ -1,16 +1,17 @@
 import os
 import django
+
 from django.core.mail import send_mail
 
-import sys
 
-# sys.path.append('C:\\Users\home_\PycharmProjects\Metrica_project')  # add <path_to_script> to system path for correct modules import.
+# add <path_to_script> to system path for correct modules import.
+# sys.path.append('C:\\Users\home_\PycharmProjects\Metrica_project')
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'Metrica_project.settings'  # set Django-needed settings module
 django.setup()
 
-from games.models import GameSession, GameScores
 from django.db.models import Min
+from games.models import GameSession, GameScores
 
 
 def email_send():

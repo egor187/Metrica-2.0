@@ -1,33 +1,32 @@
 import os
-from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, JsonResponse
+import json
+import datetime
 
-from django.views.generic.list import ListView
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.views.generic.list import ListView, View
 from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
-import users.models
-from games.models import Games, GameSession
 from django.db.models.functions import ExtractIsoWeekDay
 from django.db.models import Sum
-from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm
-from django.views.decorators.csrf import  csrf_exempt
-from users.db_actions import add_user_into_db_simple
-import json
 from django.core import serializers
 from django.core.mail import send_mail
 from django.contrib import messages
-from dotenv import load_dotenv, find_dotenv
-from django.views import View
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-import jwt
-import datetime
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.views.decorators.csrf import csrf_exempt
+
+from dotenv import load_dotenv, find_dotenv
+import jwt
+
+import users.models
+from games.models import Games, GameSession
+from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm
+from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar
 
 
