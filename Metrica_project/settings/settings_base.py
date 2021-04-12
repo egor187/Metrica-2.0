@@ -12,13 +12,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
-import sys
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -27,14 +26,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = bool(os.getenv('DEBUG_MODE'))
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'a-metrica.herokuapp.com',
     '127.0.0.1',
-    os.getenv('ALLOWED_HOST_PGROK'),
-    'testserver',
 ]
 
 # Application definition
@@ -51,7 +47,6 @@ INSTALLED_APPS = [
     'games',
     'bootstrap4',
     'anymail',
-    'debug_toolbar',
     'django_filters',
 ]
 
@@ -105,34 +100,10 @@ WSGI_APPLICATION = 'Metrica_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME_HEROKU'),
-        'USER': os.getenv('DB_USER_HEROKU'),
-        'PASSWORD': os.getenv('DB_PASSWORD_HEROKU'),
-        'HOST': os.getenv('DB_HOST_HEROKU'),
-        'PORT': '5432',
-        'TEST': {
-            'NAME': os.getenv('TEST_DB'),
-            'USER': os.getenv('DB_USER')
-        }
-    }
-}
-# if testing (sys.argv contain 'test') db settings set to
-# 'local db' sqlite3 and django connect to it to
-# create tables for testings purpose
-if 'test' in sys.argv:
-    DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -157,7 +128,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -185,16 +156,13 @@ ANYMAIL = {
     "MAILGUN_API_KEY": os.getenv('MAILGUN_API_KEY'),
     "MAILGUN_SENDER_DOMAIN": os.getenv('MAILGUN_DOMAIN'),  # your Mailgun domain, if needed
 }
+
 EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')  # if you don't already have this in settings
 SERVER_EMAIL = os.getenv('SERVER_EMAIL')  # ditto (default from-email for Django errors)
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Debug toolbar will be available for requests from this IPs
-INTERNAL_IPS = [
-    '127.0.0.1',
-    ]
 
 LOGGING = {
     "version": 1,
