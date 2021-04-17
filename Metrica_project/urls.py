@@ -25,9 +25,10 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('games/', include('games.urls')),
-    path('admin/', admin.site.urls),
+    path('bot/', include('telegram_bot.urls')),
 ]
 
 if settings.DEBUG:

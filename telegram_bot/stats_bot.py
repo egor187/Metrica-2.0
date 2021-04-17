@@ -1,22 +1,27 @@
+import requests
 import datetime as date
-from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name
-from games.models import Games
-from .income_msg_parser import parse_message
+import logging
+
+from django.urls import reverse_lazy
+
 from telegram import Bot, Update, ForceReply
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, ConversationHandler
-import requests
-import os
 from dotenv import load_dotenv, find_dotenv
+
+from Metrica_project.income_msg_parser import parse_message
+from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name
 
 load_dotenv(find_dotenv())
 
-import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('Metrica_logger')
 
-USER_REGISTRATION_URL = os.getenv('USER_REGISTRATION_URL')
-ADD_GAME_URL = os.getenv('ADD_GAME_URL')
-GAME_CHECK_URL = os.getenv('GAME_CHECK_URL')
+# USER_REGISTRATION_URL = os.getenv('USER_REGISTRATION_URL')
+USER_REGISTRATION_URL = reverse_lazy('users:add_user_from_bot')
+#ADD_GAME_URL = os.getenv('ADD_GAME_URL')
+ADD_GAME_URL = reverse_lazy('games:add_game_from_bot')
+# GAME_CHECK_URL = os.getenv('GAME_CHECK_URL')
+GAME_CHECK_URL = reverse_lazy('games:game_check')
 
 
 GAME_NAME, GAME_COVER = range(2)
@@ -50,7 +55,7 @@ def add_game_command(update, context):
 def process_add_game_command(update, context):
     game = update.message.text
     avatar = update.message.photo[-1].get_file()
-    response = requests.post(ADD_GAME_URL, data={'game_name': 'test'}, files={'avatar': avatar.download_as_bytearray()})
+    response = requests.post(ADD_GAME_URL, data={'game_name': game}, files={'avatar': avatar.download_as_bytearray()})
     update.message.reply_text(response.text)
 
 def register_user_command(update, context):

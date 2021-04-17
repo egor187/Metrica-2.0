@@ -16,22 +16,10 @@ from games.forms import GameCreationForm
 from users.models import CustomUser
 
 from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
-from Metrica_project.stats_bot import StatsBot
 from games.filter import GameFilter
 
 
-stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
-stats_bot = StatsBot(stats_bot_token)
 logger = logging.getLogger("Metrica_logger")
-
-
-@csrf_exempt
-def stats_proceed_view(request):
-    request_json = json.loads(request.body)
-    stats_bot.process_update(request_json)
-
-    # Бот в нашей реализации ничего не ждет от view, а лишь парсит body в json и использует его
-    return HttpResponse()  # "view ALWAYS must return response". В этом случае - пустой instance HttpResponse
 
 
 class GamesDetailView(DetailView):
