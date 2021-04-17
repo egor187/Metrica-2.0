@@ -8,6 +8,7 @@ from django.views.generic import ListView, DetailView, CreateView
 from django.utils.decorators import method_decorator
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
 from django.db.models import Sum, Count
 
 from games.models import Games, GameScores
@@ -65,6 +66,10 @@ class GamesDetailView(DetailView):
         return context
 
 
+# per-view caching (method decorator to convert view decorator to method of the class.
+# For cache framework need acces to request, so method of the class should contained it.
+# In 'list'-CBV one of that method - is 'get')
+@method_decorator(cache_page(120, cache='fs_cache'), name='get')
 class GamesListView(ListView):
     model = Games
     template_name = 'games_index.html'

@@ -4,6 +4,7 @@ media/
 /workspace.xml
 
 __pycache__/
+tmp
 *.py[cod]
 *$py.class
 

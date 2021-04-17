@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareOnly404',
     'django.middleware.security.SecurityMiddleware',
@@ -63,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROLLBAR = {
@@ -198,3 +200,21 @@ LOGGING = {
         },
     }
 }
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    'db_cache': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'table_cache'
+    },
+    'fs_cache': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'C:/Users/home_/PycharmProjects/Metrica/Metrica_project/tmp/django_cache/'
+    }
+}
+
+CACHE_MIDDLEWARE_ALIAS = 'db_cache'
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
+CACHE_MIDDLEWARE_SECONDS = 600
