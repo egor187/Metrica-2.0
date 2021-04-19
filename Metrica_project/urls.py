@@ -29,6 +29,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('games/', include('games.urls')),
     path('bot/', include('telegram_bot.urls')),
+    path('summernote/', include('django_summernote.urls')),
 ]
 
 if settings.DEBUG:

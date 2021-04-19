@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django_summernote.admin import SummernoteModelAdmin
 
 from users.forms import CustomUserCreationForm, CustomUserUpdateForm
 from .models import CustomUser, ClaimTopic, Claim
@@ -22,6 +23,10 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('username',)
 
 
+class ClaimAdmin(SummernoteModelAdmin):
+    summernote_fields = '__all__'
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(Claim)
+admin.site.register(Claim, ClaimAdmin)
 admin.site.register(ClaimTopic)

@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'Metrica_project',
     'users',
     'games',
+    'telegram_bot',
     'bootstrap4',
     'anymail',
     'django_filters',
+    'django_summernote',
 ]
 
 MIDDLEWARE = [
@@ -218,3 +220,14 @@ CACHES = {
 CACHE_MIDDLEWARE_ALIAS = 'db_cache'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 CACHE_MIDDLEWARE_SECONDS = 600
+
+# From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+    }
+}
