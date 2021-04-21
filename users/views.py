@@ -181,10 +181,7 @@ def feedback_view(request):
 
 class ClaimCreateView(LoginRequiredMixin, CreateView):
     model = users.models.Claim
-    fields = [
-        "topic",
-        "claim",
-    ]
+    form_class = FeedbackForm
     template_name = 'feedback.html'
 
     def form_valid(self, form):

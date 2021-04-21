@@ -2,6 +2,9 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import CustomUser
 from django import forms
+from .models import Claim
+
+from django_summernote.widgets import SummernoteWidget
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -28,7 +31,13 @@ class CustomUserUpdateForm(UserChangeForm):
         ]
 
 
-class FeedbackForm(forms.Form):
-    subject = forms.ChoiceField()
-    content = forms.CharField(label="Текст обращения", widget=forms.Textarea)
-    email = forms.EmailField()
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Claim
+        fields = [
+            'topic',
+            'claim'
+        ]
+        widgets = {
+            'claim': SummernoteWidget()
+        }

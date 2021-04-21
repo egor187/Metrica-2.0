@@ -48,10 +48,11 @@ INSTALLED_APPS = [
     'telegram_bot',
     'users',
     'games',
-
+    'telegram_bot',
     'bootstrap4',
     'anymail',
     'django_filters',
+    'django_summernote',
 ]
 
 MIDDLEWARE = [
@@ -224,3 +225,14 @@ CACHE_MIDDLEWARE_SECONDS = 600
 
 #  Url for inner requests between "bot-app" and others Django apps
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
+
+# From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+    }
+}
