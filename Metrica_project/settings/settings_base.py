@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'Metrica_project',
+    'telegram_bot',
     'users',
     'games',
     'telegram_bot',
@@ -217,9 +219,12 @@ CACHES = {
     }
 }
 
-CACHE_MIDDLEWARE_ALIAS = 'db_cache'
+CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 CACHE_MIDDLEWARE_SECONDS = 600
+
+#  Url for inner requests between "bot-app" and others Django apps
+PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
 
 # From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
 X_FRAME_OPTIONS = 'SAMEORIGIN'

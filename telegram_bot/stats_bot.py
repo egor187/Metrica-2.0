@@ -1,8 +1,11 @@
+from django.conf import settings
+
 import requests
 import datetime as date
 import logging
 
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.utils.text import format_lazy
 
 from telegram import Bot, Update, ForceReply
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, ConversationHandler
@@ -16,12 +19,12 @@ load_dotenv(find_dotenv())
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('Metrica_logger')
 
-# USER_REGISTRATION_URL = os.getenv('USER_REGISTRATION_URL')
-USER_REGISTRATION_URL = reverse_lazy('users:add_user_from_bot')
-#ADD_GAME_URL = os.getenv('ADD_GAME_URL')
-ADD_GAME_URL = reverse_lazy('games:add_game_from_bot')
-# GAME_CHECK_URL = os.getenv('GAME_CHECK_URL')
-GAME_CHECK_URL = reverse_lazy('games:game_check')
+site_root_url = settings.PROJECT_ROOT_URL
+
+# like f'string, but evaulate "lazy objects"
+USER_REGISTRATION_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('users:add_user_from_bot'))
+ADD_GAME_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('games:add_game_from_bot'))
+GAME_CHECK_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('games:game_check'))
 
 
 GAME_NAME, GAME_COVER = range(2)

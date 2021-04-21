@@ -49,3 +49,5 @@ if 'test' in sys.argv:
 INTERNAL_IPS = [
     '127.0.0.1',
     ]
+
+PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL_DEV')

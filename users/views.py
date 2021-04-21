@@ -31,7 +31,7 @@ from users.utils import get_player_calendar
 
 
 load_dotenv(find_dotenv())
-URL_PATH = 'https://a-metrica.herokuapp.com'
+site_root_url = settings.PROJECT_ROOT_URL
 
 
 class UsersLoginView(LoginView):
@@ -126,7 +126,7 @@ def invite_to_register(request):
                 OR redirect to registration page (form)
     """
     if request.user.id:
-        return HttpResponse(URL_PATH + str(reverse_lazy('users:users_update', args=[request.user.id])))
+        return HttpResponse(f"{site_root_url}{str(reverse_lazy('users:users_update', args=[request.user.id]))}")
     return HttpResponseRedirect(reverse_lazy('users:users_register'))
 
 
@@ -143,11 +143,7 @@ def add_user_view(request):
         new_user_pk = add_user_into_db_simple(user)
 
     return HttpResponse(
-        URL_PATH + str(
-            reverse_lazy(
-                'users:reg_cont', args=[new_user_pk]
-            )
-        )
+        f"{site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
     ) if new_user_pk else HttpResponse(
         f"Вы уже зарегистрированы. Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
     )
@@ -193,18 +189,6 @@ class ClaimCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-def invite_to_register(request):
-    """
-    DRAFT
-    :param request:
-    :return:    str()__link for user update IF user already login (useless for REST with tg_bot)
-                OR redirect to registration page (form)
-    """
-    if request.user.id:
-        return HttpResponse(URL_PATH + str(reverse_lazy('users:users_update', args=[request.user.id])))
-    return HttpResponseRedirect(reverse_lazy('users:users_register'))
-
-
 @csrf_exempt  # disable csrf protection for testing via Postman by using decorator
 def add_user_view(request):
     if request.method == 'POST':
@@ -217,12 +201,7 @@ def add_user_view(request):
         user = request.GET.get('user')
         new_user_pk = add_user_into_db_simple(user)
 
-    return HttpResponse(
-        URL_PATH + str(
-            reverse_lazy(
-                'users:reg_cont', args=[new_user_pk]
-            )
-        )
+    return HttpResponse(f"{site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
     ) if new_user_pk else HttpResponse(
         f"Вы уже зарегистрированы. Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
     )
