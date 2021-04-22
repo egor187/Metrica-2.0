@@ -102,7 +102,7 @@ class GamesAddBotView(View):
         try:
             avatar = request.FILES["avatar"]
         except MultiValueDictKeyError as e:
-            logger.info("No image for cover provided. Apply default cover for case 'new game'")
+            logger.info(f"Error signature: {e}. No image for cover provided. Apply default cover for case 'new game'")
             result = add_game_into_db_single_from_bot(game_name)
         else:
             result = add_game_into_db_single_from_bot(game_name, avatar)

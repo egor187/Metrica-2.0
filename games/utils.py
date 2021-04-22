@@ -1,4 +1,3 @@
-import os
 import logging
 
 import requests
@@ -8,7 +7,6 @@ logger = logging.getLogger("Metrica_logger")
 
 
 def get_default_cover(fp, source):
-    os.makedirs(fp, exist_ok=True)
 
     file_name = 'default_cover.jpg'
     file_fp = f"{fp}\\{file_name}"

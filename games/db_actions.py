@@ -81,9 +81,8 @@ def add_game_into_db_single_from_bot(name, cover=None):
 
     os.makedirs(full_path, exist_ok=True)
 
-    get_default_cover(full_path, default_cover_download_source)
-
     if not cover:
+        get_default_cover(full_path, default_cover_download_source)
         game = Games.objects.create(name=name, cover_art=default_cover_path_for_field)
         return game
 

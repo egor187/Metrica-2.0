@@ -22,9 +22,9 @@ logger = logging.getLogger('Metrica_logger')
 site_root_url = settings.PROJECT_ROOT_URL
 
 # like f'string, but evaulate "lazy objects"
-USER_REGISTRATION_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('users:add_user_from_bot'))
-ADD_GAME_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('games:add_game_from_bot'))
-GAME_CHECK_URL = format_lazy("{a}{b}", a=site_root_url, b=reverse_lazy('games:game_check'))
+USER_REGISTRATION_URL = format_lazy("{}{}", site_root_url, reverse_lazy('users:add_user_from_bot'))
+ADD_GAME_URL = format_lazy("{}{}", site_root_url, reverse_lazy('games:add_game_from_bot'))
+GAME_CHECK_URL = format_lazy("{}{}", site_root_url, reverse_lazy('games:game_check'))
 
 
 GAME_NAME, GAME_COVER = range(2)
@@ -171,22 +171,33 @@ def game_name(update, context):
 
     if response.json()["exist_game"]:
         update.message.reply_text(f'Game "{context.user_data["game_name"]}" already tracking by Metrica!')
-        return cancel(update)
+        return cancel(update, context)
     else:
-        update.message.reply_text('Send game cover')
+        update.message.reply_text(
+            "Send me cover for your game OR send any text in response to register game with default cover"
+        )
         return GAME_COVER
 
 
 def game_cover(update, context):
     game_name = context.user_data["game_name"]
     photo = update.message.photo[-1].get_file()
+    update.message.reply_text(f"Processing the cover for the '{game_name}'...")
     requests.post(ADD_GAME_URL, data={'game_name': game_name}, files={'avatar': photo.download_as_bytearray()})
     update.message.reply_text(f'New game "{game_name}" added to Metrica!')
     return ConversationHandler.END
 
 
-def cancel(update):
+def cancel(update, context):
     update.message.reply_text('End dialog')
+    return ConversationHandler.END
+
+
+def default_cover_process(update, context):
+    update.message.reply_text('Creating game with default cover...')
+    game_name = context.user_data["game_name"]
+    requests.post(ADD_GAME_URL, data={'game_name': game_name})
+    update.message.reply_text(f'New game "{game_name}" added to Metrica!')
     return ConversationHandler.END
 
 
@@ -194,7 +205,10 @@ conv_handler = ConversationHandler(
     entry_points=[CommandHandler('add_game', add_game_start)],
     states={
         GAME_NAME: [MessageHandler(Filters.text & ~Filters.command, game_name)],
-        GAME_COVER: [MessageHandler(Filters.photo, game_cover)]
+        GAME_COVER: [MessageHandler(Filters.photo & Filters.text, game_cover)]
     },
-    fallbacks=[CommandHandler('cancel', cancel)]
+    fallbacks=[
+        CommandHandler('cancel', cancel),
+        MessageHandler(Filters.text, default_cover_process),
+    ]
 )
