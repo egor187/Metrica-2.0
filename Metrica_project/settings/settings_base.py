@@ -208,14 +208,6 @@ LOGGING = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-    'db_cache': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'table_cache'
-    },
-    'fs_cache': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'C:/Users/home_/PycharmProjects/Metrica/Metrica_project/tmp/django_cache/'
     }
 }
 
@@ -223,6 +215,17 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 CACHE_MIDDLEWARE_SECONDS = 600
 
+
+# From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+    }
+}
 #  Url for inner requests between "bot-app" and others Django apps
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
 

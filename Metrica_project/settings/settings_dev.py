@@ -51,3 +51,16 @@ INTERNAL_IPS = [
     ]
 
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL_DEV')
+
+CACHES.update(
+    {
+        'db_cache': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'table_cache'
+        },
+        'fs_cache': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': os.getenv('FS_CACHE_PATH')
+        }
+    }
+)
