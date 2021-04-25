@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import validate_image_file_extension
-
+from django.urls import reverse, reverse_lazy
 from users.models import CustomUser
 
 
@@ -16,7 +16,7 @@ class Games(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return f'/games/{self.id}/'
+        return reverse('games:games_detail', args=[self.pk])
 
 
 class GameSession(models.Model):
