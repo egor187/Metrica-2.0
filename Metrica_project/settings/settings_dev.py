@@ -64,3 +64,5 @@ CACHES.update(
         }
     }
 )
+
+CACHE_MIDDLEWARE_ALIAS = 'redis_cache'

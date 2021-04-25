@@ -57,7 +57,7 @@ class GamesDetailView(DetailView):
 # per-view caching (method decorator to convert view decorator to method of the class.
 # For cache framework need acces to request, so method of the class should contained it.
 # In 'list'-CBV one of that method - is 'get')
-@method_decorator(cache_page(120, cache='fs_cache'), name='get')
+# @method_decorator(cache_page(120, cache='fs_cache'), name='get')
 class GamesListView(ListView):
     model = Games
     template_name = 'games_index.html'
