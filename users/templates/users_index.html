@@ -28,7 +28,7 @@
                     <tr>
                         <th scope="row">{{ user.id }}</th>
                         <td>
-                            <a href={% url 'users:users_detail' user.pk %}>{{ user.username }}</a>
+                            <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
                         </td>
                         {% if user.avatar %}
                             <td>

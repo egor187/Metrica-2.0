@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
         return self.get_full_name()
 
     def get_absolute_url(self):
-        return '/users/'
+        return reverse_lazy('users:users_detail', args=[self.pk])
 
 
 class ClaimTopic(models.Model):

@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'telegram_bot',
     'users',
     'games',
-
+  
     'bootstrap4',
     'anymail',
     'django_filters',
@@ -231,3 +231,13 @@ SUMMERNOTE_CONFIG = {
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
 
 SWAGGER_YAML_FILENAME = '/docs/openapi.yml'
+# From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+    }
+}
