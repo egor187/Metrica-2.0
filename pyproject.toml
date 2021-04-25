@@ -26,6 +26,7 @@ django-filter = "^2.4.0"
 Faker = "^6.6.3"
 PyJWT = "^2.0.1"
 django-summernote = "^0.8.11"
+django-swagger-render = "^0.1.1"
 
 [tool.poetry.dev-dependencies]
 

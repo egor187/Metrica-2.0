@@ -148,6 +148,14 @@ python-versions = "*"
 django = "*"
 
 [[package]]
+name = "django-swagger-render"
+version = "0.1.1"
+description = "Swagger documentation in Django"
+category = "main"
+optional = false
+python-versions = ">=3.5,<4.0"
+
+[[package]]
 name = "faker"
 version = "6.6.3"
 description = "Faker is a Python package that generates fake data for you."
@@ -368,7 +376,7 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "527f8899b29e475fb2567d8d0a17a98a1661c09bd8b5cb8f1813ddc75c0fed4a"
+content-hash = "678c7e036d68fed8a2d008ee2fcf346ecc1c04c855cc3a02e8a8bfdd3ea09ac8"
 
 [metadata.files]
 apscheduler = [
@@ -414,6 +422,10 @@ django-filter = [
 ]
 django-summernote = [
     {file = "django-summernote-0.8.11.6.tar.gz", hash = "sha256:c23dae35c287f0d3d1ff801654ace77c3c6836453162e87c7330710d74d2eb88"},
+]
+django-swagger-render = [
+    {file = "django-swagger-render-0.1.1.tar.gz", hash = "sha256:77e7f284128cc00d9e217481c7d1d606a9bc523e836e1e992247478725f8aab9"},
+    {file = "django_swagger_render-0.1.1-py3-none-any.whl", hash = "sha256:5da8c3dfa43a5754516fdf259f056373df55803e43f9b572a3fe6e3d4d212d69"},
 ]
 faker = [
     {file = "Faker-6.6.3-py3-none-any.whl", hash = "sha256:579348fac4597cf5c998f10e3b840b48d85157413cb501809f98a83eb228e907"},

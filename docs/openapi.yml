@@ -1,0 +1,84 @@
+openapi: "3.0.2"
+info:
+  title: "Metrica 2.0 API"
+  description: "Web-app for calculating metrics statistics"
+  version: "1.0"
+  contact:
+    name: "Metrica 2.0 API"
+    url: "https://a-metrica.herokuapp.com"
+    email: "py.egor.py@gmail.com"
+servers:
+  - url: "https://a-metrica.herokuapp.com/"
+paths:
+  /games:
+    get:
+      description: "Return list of all registred metrics"
+      responses:
+        "200":
+          description: "games response"
+
+  /games/{id}:
+    get:
+      description: "Return instance of game"
+      responses:
+        "200":
+          description: "games response"
+      parameters:
+      - name: id
+        in: path
+        description: "ID of game to fetch"
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+  /games/add_game:
+    post:
+      description: "Create a new game in Metrica "
+      responses:
+        "200":
+          description: "games response"
+
+  /users:
+    get:
+      description: "Return list of all registred users"
+      responses:
+        "200":
+          description: "users response"
+
+  /users/{id}:
+    get:
+      description: "Return instance of user"
+      responses:
+        "200":
+          description: "games response"
+      parameters:
+        - name: id
+          in: path
+          description: "ID of user to fetch"
+          required: true
+          schema:
+            type: integer
+            format: int64
+
+  /users/add_user:
+    post:
+      description: "Create a new User in Metrica "
+      responses:
+        "200":
+          description: "users response"
+
+  /users/update_user/{id}:
+    post:
+      description: "Update user instance"
+      responses:
+        "200":
+          description: "users response"
+      parameters:
+        - name: id
+          in: path
+          description: "ID of user to update"
+          required: true
+          schema:
+            type: integer
+            format: int64
