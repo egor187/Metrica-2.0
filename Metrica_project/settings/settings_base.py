@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'games',
     'telegram_bot',
 
+
     'bootstrap4',
     'anymail',
     'django_filters',
@@ -159,7 +160,7 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-MEDIA_UPLOADS_ROOT = MEDIA_ROOT + '\\uploads'
+MEDIA_UPLOADS_ROOT = MEDIA_ROOT + '/uploads'
 
 ANYMAIL = {
     # (exact settings here depend on your ESP...)
@@ -240,6 +241,7 @@ SUMMERNOTE_CONFIG = {
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
 
 SWAGGER_YAML_FILENAME = '/docs/openapi.yml'
+
 # From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 

@@ -29,7 +29,7 @@ PyJWT = "^2.0.1"
 django-summernote = "^0.8.11"
 django-redis = "^4.12.1"
 django-swagger-render = "^0.1.1"
-
+pytest = "^6.2.3"
 
 [tool.poetry.dev-dependencies]
 
