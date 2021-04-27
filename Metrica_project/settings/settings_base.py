@@ -209,23 +209,6 @@ LOGGING = {
     }
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
-    'redis_cache': {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_KEY_PREFIX = ''
-CACHE_MIDDLEWARE_SECONDS = 600
-
 
 # From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
 X_FRAME_OPTIONS = 'SAMEORIGIN'
