@@ -2,7 +2,7 @@
 {% load bootstrap4 %}
 
 {% block content %}
-    <form method="POST" action="{% url 'users:reg_cont' object.id %}">
+    <form method="POST" enctype="multipart/form-data" action="{% url 'users:reg_cont' object.id %}">
         {% csrf_token %}
         {% bootstrap_form form %}
         <div class="form-group">
