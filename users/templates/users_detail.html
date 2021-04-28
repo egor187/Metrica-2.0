@@ -11,6 +11,41 @@
 
     <div class="row">
         <div class="col">
+            {% for game in games %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="media">
+                            <img class="mr-3" width="75" src="{{ game.cover.url }}" alt="game cover">
+                            <div class="media-body">
+                                <h5 class="mt-0">{{ game.name }}</h5>
+                                <p>Played {{ game.times_played }} times with {{ game.total_score }} score total</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <table class="table table-borderless">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Score</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for session in game.sessions %}
+                            <tr>
+                                <td>{{ session.date }}</td>
+                                <td>{{ session.score }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
             <table class="table table-borderless">
                 <thead>
                 <tr>

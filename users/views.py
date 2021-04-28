@@ -11,7 +11,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import ExtractIsoWeekDay
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.core import serializers
 from django.core.mail import send_mail
 from django.contrib import messages
@@ -24,11 +24,10 @@ from dotenv import load_dotenv, find_dotenv
 import jwt
 
 import users.models
-from games.models import Games, GameSession
+from games.models import Games, GameSession, GameScores
 from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm
 from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar
-
 
 load_dotenv(find_dotenv())
 site_root_url = settings.PROJECT_ROOT_URL
@@ -92,6 +91,30 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 'Email'
             )
         )
+
+        games = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
+
+        games_data = []
+        for game in games:
+            sessions_data = []
+            for session in game.sessions.filter(scores__user=self.get_object()):
+                session_data = {
+                    "date": session.created_at,
+                    "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                }
+                sessions_data.append(session_data)
+            game_data = {
+                "name": game.name,
+                "cover": game.cover_art,
+                "total_score": game.total_score,
+                "times_played": game.times_played,
+                "sessions": sessions_data
+            }
+            games_data.append(game_data)
+
+        context["games"] = games_data
 
         context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
             sessions__scores__user__pk=self.kwargs['pk']
@@ -231,6 +254,7 @@ class JwtLoginView(View):
             # raise ObjectDoesNotExist('Incorrect password!')
             return HttpResponseNotFound('Incorrect password!')
         return response
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class JwtUserView(View):
