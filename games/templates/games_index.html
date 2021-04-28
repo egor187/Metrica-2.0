@@ -38,9 +38,9 @@
                 <tbody>
                 {% for game in filter.qs %}
                     <tr>
-                        <th scope="row">{{ game.pk}}</th>
+                        <th scope="row">{{ game.pk }}</th>
                         <td>
-                            <a href="{% url 'games:games_detail' game.pk %}">{{ game.name }}</a>
+                            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
                         </td>
 
 {% comment 'Duplication depend on model' %}

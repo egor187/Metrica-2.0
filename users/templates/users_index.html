@@ -24,11 +24,16 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for user in users_list %}
+                {% for player in users_list %}
                     <tr>
-                        <th scope="row">{{ user.id }}</th>
+                        <th scope="row">{{ player.id }}</th>
                         <td>
-                            <a href={% url 'users:users_detail' user.pk %}>{{ user.username }}</a>
+                            {% if user.pk == player.pk %}
+                            <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
+                            {% else %}
+                            {{ player.username }}
+                            {% endif %}
+                            <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
                         </td>
                         {% if user.avatar %}
                             <td>

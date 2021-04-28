@@ -7,6 +7,7 @@ packages = [
     { include = "Metrica_project" },
     { include = "games" },
     { include = "users" },
+    { include = "telegram_bot" },
 ]
 
 [tool.poetry.dependencies]
@@ -26,6 +27,8 @@ django-filter = "^2.4.0"
 Faker = "^6.6.3"
 PyJWT = "^2.0.1"
 django-summernote = "^0.8.11"
+django-redis = "^4.12.1"
+django-swagger-render = "^0.1.1"
 pytest = "^6.2.3"
 
 [tool.poetry.dev-dependencies]

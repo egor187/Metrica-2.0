@@ -60,6 +60,17 @@ class UsersListView(ListView):
 class UsersDetailView(LoginRequiredMixin, DetailView):
     model = users.models.CustomUser
     template_name = 'users_detail.html'
+    perm_denied_msg = 'Permission denied. Only owner can view profile'
+
+    def get(self, request, *args, **kwargs):
+        """
+        Override super_method to achieve filtering access only to autherized user
+        """
+        # if self.kwargs['pk'] != request.user.pk:
+        if self.get_object().pk != request.user.pk:  # more "django_style" method to call .get_object() for get instance of a model
+            messages.error(request, self.perm_denied_msg)
+            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+        return super().get(self, request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """
@@ -129,10 +140,10 @@ class UsersCreateView(CreateView):
 
 class UsersUpdateView(LoginRequiredMixin, UpdateView):
     model = users.models.CustomUser
-    form_class = CustomUserUpdateForm
+    form_class = CustomUserCreationForm
     template_name = 'user_update.html'
     success_url = reverse_lazy('users:users_index')
-    perm_denied_msg = 'Permission denied. Only owner can change account'
+    perm_denied_msg = 'Permission denied. Only owner can change profile'
 
     def dispatch(self, request, *args, **kwargs):
         if self.kwargs['pk'] != request.user.pk:
@@ -177,7 +188,7 @@ class UserUpdateViewFromBot(UpdateView):
     Class view without @login_required and permissions check for "registration-through-bot" process
     """
     model = users.models.CustomUser
-    form_class = CustomUserUpdateForm
+    form_class = CustomUserCreationForm
     template_name = 'user_update_from_bot.html'
     success_url = reverse_lazy('index')
 
@@ -210,24 +221,6 @@ class ClaimCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.claimer = self.request.user
         return super().form_valid(form)
-
-
-@csrf_exempt  # disable csrf protection for testing via Postman by using decorator
-def add_user_view(request):
-    if request.method == 'POST':
-        request_raw = request.body
-        request_json = json.loads(request_raw)
-        user = request_json['user']
-        new_user_pk = add_user_into_db_simple(user)
-
-    if request.method == 'GET':
-        user = request.GET.get('user')
-        new_user_pk = add_user_into_db_simple(user)
-
-    return HttpResponse(f"{site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
-                        ) if new_user_pk else HttpResponse(
-        f"Вы уже зарегистрированы. Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
-    )
 
 
 @method_decorator(csrf_exempt, name='dispatch')
