@@ -162,6 +162,33 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 sessions__is_private=False
             ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
+        games = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
+
+        games_data = []
+        for game in games:
+            sessions_data = []
+            for session in game.sessions.filter(scores__user=self.get_object()):
+                session_data = {
+                    "date": session.created_at,
+                    "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                }
+                sessions_data.append(session_data)
+            game_data = {
+                "name": game.name,
+                "cover": game.cover_art,
+                "total_score": game.total_score,
+                "times_played": game.times_played,
+                "sessions": sessions_data
+            }
+            games_data.append(game_data)
+
+        context["games"] = games_data
+
+        context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
         context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
 
