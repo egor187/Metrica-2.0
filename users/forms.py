@@ -1,4 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+import django.forms
 
 from .models import CustomUser
 from django import forms
@@ -41,3 +42,20 @@ class FeedbackForm(forms.ModelForm):
         widgets = {
             'claim': SummernoteWidget()
         }
+
+
+class CustomUserAddFriendForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        """Override to get opportunity to set css-class for ModelForm fields"""
+        super().__init__(*args, **kwargs)
+        self.fields['friendship'].widget.attrs.update({'class': 'special'})
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "friendship",
+        ]
+        labels = {
+            "friendship": "Select the user to whom you want to be friends",
+        }
+        widgets = {'friendship': django.forms.CheckboxSelectMultiple()}

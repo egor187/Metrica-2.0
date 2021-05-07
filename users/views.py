@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.views.generic.list import ListView, View
 from django.views.generic import DetailView
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView, FormView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import ExtractIsoWeekDay
@@ -25,7 +25,7 @@ import jwt
 
 import users.models
 from games.models import Games, GameSession, GameScores
-from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm
+from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm, CustomUserAddFriendForm
 from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar
 
@@ -51,10 +51,24 @@ class UsersLogoutView(LogoutView):
     template_name = 'log_in_out.html'
 
 
-class UsersListView(ListView):
+class UsersListView(LoginRequiredMixin, ListView):
     model = users.models.CustomUser
     template_name = 'users_index.html'
     context_object_name = 'users_list'
+
+
+    def get_queryset(self):
+        """
+        Override parent method to get custom queryset depends on 'friendship' field of a request.user
+        :return: only friends of request.user or all() for request.user.is_staff=True
+        """
+        if self.request.user.is_staff:
+            return users.models.CustomUser.objects.all()
+
+        self.friends_list = list(self.request.user.friendship.values_list('username', flat=True))
+        result = users.models.CustomUser.objects.filter(username__in=self.friends_list)
+
+        return result.union(users.models.CustomUser.objects.filter(pk=self.request.user.pk))
 
 
 class UsersDetailView(LoginRequiredMixin, DetailView):
@@ -66,8 +80,10 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         """
         Override super_method to achieve filtering access only to autherized user
         """
-        # if self.kwargs['pk'] != request.user.pk:
-        if self.get_object().pk != request.user.pk:  # more "django_style" method to call .get_object() for get instance of a model
+        self.friends_pk_list = list(self.request.user.friendship.values_list('pk', flat=True))
+        if self.get_object().pk != request.user.pk\
+                and self.get_object().pk not in self.friends_pk_list\
+                and not request.user.is_staff:  # more "django_style" method to call .get_object() for get instance of a model
             messages.error(request, self.perm_denied_msg)
             return HttpResponseRedirect(reverse_lazy('users:users_index'))
         return super().get(self, request, *args, **kwargs)
@@ -91,6 +107,60 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 'Email'
             )
         )
+        if self.request.user.pk != self.kwargs["pk"]:
+            games = Games.objects.prefetch_related('sessions').filter(
+                sessions__scores__user__pk=self.kwargs['pk'],
+                sessions__is_private=False,
+            ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
+        else:
+            games = Games.objects.prefetch_related('sessions').filter(
+                sessions__scores__user__pk=self.kwargs['pk'],
+            ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
+
+
+        games_data = []
+        for game in games:
+            sessions_data = []
+            if self.request.user.pk != self.kwargs['pk']:
+                for session in game.sessions.filter(scores__user=self.get_object(), is_private=False):
+                    session_data = {
+                        "date": session.created_at,
+                        "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                    }
+                    sessions_data.append(session_data)
+            else:
+                for session in game.sessions.filter(scores__user=self.get_object()):
+                    session_data = {
+                        "date": session.created_at,
+                        "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                    }
+                    sessions_data.append(session_data)
+
+            if not sessions_data:
+                continue
+
+            game_data = {
+                "name": game.name,
+                "cover": game.cover_art,
+                "total_score": game.total_score,
+                "times_played": game.times_played,
+                "sessions": sessions_data
+            }
+            games_data.append(game_data)
+
+        context["games"] = games_data
+
+
+        if self.request.user.pk == self.kwargs['pk']:
+            context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
+                sessions__scores__user__pk=self.kwargs['pk']
+            ).distinct().annotate(player_score=Sum("sessions__scores__score"))
+
+        else:
+            context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
+                sessions__scores__user__pk=self.kwargs['pk'],
+                sessions__is_private=False
+            ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
         games = Games.objects.prefetch_related('sessions').filter(
             sessions__scores__user__pk=self.kwargs['pk']
@@ -122,8 +192,14 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
 
         context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
 
-        self_game_sessions = GameSession.objects.filter(scores__user__pk=self.kwargs["pk"]).\
-            annotate(weekday=ExtractIsoWeekDay("created_at"))
+        if self.request.user.pk == self.kwargs['pk']:
+            self_game_sessions = GameSession.objects.filter(scores__user__pk=self.kwargs["pk"]).\
+                annotate(weekday=ExtractIsoWeekDay("created_at"))
+        else:
+            self_game_sessions = GameSession.objects.filter(
+                scores__user__pk=self.kwargs["pk"],
+                is_private=False
+            ).annotate(weekday=ExtractIsoWeekDay("created_at"))
 
         context['sessions'] = self_game_sessions
 
@@ -150,6 +226,49 @@ class UsersUpdateView(LoginRequiredMixin, UpdateView):
             messages.error(request, self.perm_denied_msg)
             return HttpResponseRedirect(reverse_lazy('users:users_index'))
         return super().dispatch(request, *args, **kwargs)
+
+
+class FriendAddView(View):
+    # model = users.models.CustomUser
+    form_class = CustomUserAddFriendForm
+    template_name = 'friend_add.html'
+    success_url = reverse_lazy('users:users_index')
+    perm_denied_msg = 'Permission denied. Only owner can manage friends'
+    friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. '{friend}' now can view your profile page"
+    friendship_exist_msg  = "You're already in '{friend}' friend_list."
+
+    def post(self, *args, **kwargs):
+        form = CustomUserAddFriendForm(self.request.POST)
+        if form.is_valid():
+            user = self.request.user
+            friends = form.cleaned_data['friendship']
+            for friend in friends:
+                if friend.pk == self.request.user.pk:
+                    continue
+                messages.info(
+                    self.request,
+                    self.friendship_succeed_msg.format(friend=friend.username)
+                ) if not friend.friendship.filter(pk=user.pk).exists() else messages.error(
+                    self.request,
+                    self.friendship_exist_msg.format(friend=friend.username)
+                )
+                friend.friendship.add(user)
+            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+        else:
+            print(form.errors)
+            messages.error(self.request, self.perm_denied_msg)
+
+            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+
+    def get(self, *args, **kwargs):
+        form = CustomUserAddFriendForm()
+        form.fields['friendship'].queryset = users.models.CustomUser.objects.exclude(
+            pk=self.request.user.pk
+        ).exclude(
+            friendship__pk=self.request.user.pk
+        )
+
+        return render(self.request, self.template_name, {'form': form})
 
 
 def invite_to_register(request):

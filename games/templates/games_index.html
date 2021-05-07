@@ -29,7 +29,9 @@
                     <th scope="col">#</th>
                     <th scope="col">Game</th>
                     {% comment %}<th scope="col">Sessions</th>{% endcomment %}
-                    <th scope="col">Quantity </th>
+                    {% if user.is_staff %}
+                        <th scope="col">Quantity </th>
+                    {% endif %}
                     <th scope="col">Players</th>
                     <th scope="col">Scores</th>
                 </tr>
@@ -54,23 +56,29 @@
 {% endcomment %}
 
                         <td>
-                            {{ game.sessions.all.count }}
+                            {% if user.is_staff %}
+                                {{ game.sessions.all.count }}
+                            {% endif %}
                         </td>
 
 
                         <td>
                             {% for session in game.sessions.all %}
-                                {% for score in session.scores.all %}
-                                    {{ score.user }}
-                                {% endfor %}
+                                {% if not session.is_private %}
+                                    {% for score in session.scores.all %}
+                                        {{ score.user }}
+                                    {% endfor %}
+                                {% endif %}
                             {% endfor %}
                         </td>
 
                         <td>
                             {% for session in game.sessions.all %}
-                                {% for score in session.scores.all %}
-                                    {{ score.score }},
-                                {% endfor %}
+                                {% if not session.is_private %}
+                                    {% for score in session.scores.all %}
+                                        {{ score.score }},
+                                    {% endfor %}
+                                {% endif %}
                             {% endfor %}
                         </td>
 

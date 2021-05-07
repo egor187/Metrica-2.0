@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
 from django.db.models import Sum, Count
 
-from games.models import Games, GameScores
+from games.models import Games, GameScores, GameSession
 from games.forms import GameCreationForm
 from users.models import CustomUser
 
@@ -31,15 +31,83 @@ class GamesDetailView(DetailView):
         context = super().get_context_data()
 
         users = CustomUser.objects.prefetch_related("scores") \
-            .filter(scores__game_session__game__id=self.kwargs["pk"]) \
-            .annotate(played_games_count=Count("scores__game_session"))
+            .filter(
+            scores__game_session__game__id=self.kwargs["pk"],
+        ).annotate(played_public_games_count=Count("scores__game_session"))
 
-        context['played_games_by_players'] = users
+        filtered_users = []
+        for user in users:
+            sessions = []
+            if self.request.user.pk != user.pk:
+                for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+                    if score.game_session.is_private:
+                        user.played_public_games_count -= 1
+                    else:
+                        sessions.append(score.game_session)
+            else:
+                for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+                    sessions.append(score.game_session)
 
-        users_with_scores = list(map(lambda user: dict(name=user.username,
-                                                       score=GameScores.objects.filter(
-                                                           game_session__game__pk=self.kwargs['pk']).filter(
-                                                           user=user).aggregate(Sum('score'))['score__sum']), users))
+            if sessions:
+                filtered_users.append(user)
+
+
+        context['played_games_by_players'] = filtered_users
+
+        private_sessions = GameSession.objects.prefetch_related("scores") \
+            .filter(
+            game__id=self.kwargs["pk"],
+            is_private=True,
+            scores__user__pk=self.request.user.pk
+        )
+
+        context['private_sessions'] = list(map(lambda session: dict(
+            session=session,
+            score=GameScores.objects.get(
+                game_session=session,
+                user=self.request.user.pk
+            ).score
+        ), private_sessions))
+
+        def get_users_with_scores(current_user, users_list):
+            result = []
+            for user in users_list:
+                if current_user.pk == user.pk:
+                    result.append(dict(
+                        name=user.username,
+                        score=GameScores.objects.filter(
+                            game_session__game__pk=self.kwargs['pk'],
+                        ).filter(
+                            user=user
+                        ).aggregate(Sum('score'))['score__sum'],
+                        private_score=GameScores.objects.filter(
+                            game_session__game__pk=self.kwargs['pk'],
+                            game_session__is_private=True,
+                        ).filter(
+                            user=user
+                        ).aggregate(Sum('score'))['score__sum']
+                        )
+                    )
+                else:
+                    result.append(dict(
+                        name=user.username,
+                        score=GameScores.objects.filter(
+                            game_session__game__pk=self.kwargs['pk'],
+                            game_session__is_private=False,
+                        ).filter(
+                            user=user
+                        ).aggregate(Sum('score'))['score__sum']))
+            return result
+
+        # users_with_scores = list(map(lambda user: dict(name=user.username,
+        #                                                score=GameScores.objects.filter(
+        #                                                    game_session__game__pk=self.kwargs['pk'],
+        #                                                    game_session__is_private=False
+        #                                                ).filter(
+        #                                                    user=user
+        #                                                ).aggregate(Sum('score'))['score__sum']), users))
+
+        users_with_scores = get_users_with_scores(self.request.user, filtered_users)
 
         context["users"] = users_with_scores
 
@@ -47,9 +115,6 @@ class GamesDetailView(DetailView):
         context['server_data'] = {
             "users": users_with_scores
         }
-
-        # Аннотация количества сыгранных сессий для каждой игры для каждого юзера
-        # CustomUser.objects.annotate(played_games_count=Count("scores__game_session"))
 
         return context
 

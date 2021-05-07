@@ -16,6 +16,9 @@ DATABASES = {
     }
 }
 
+MIDDLEWARE.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
+MIDDLEWARE.append('django.middleware.cache.FetchFromCacheMiddleware')
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',

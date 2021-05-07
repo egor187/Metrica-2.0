@@ -62,6 +62,9 @@
             <th scope="col">Players</th>
             <th scope="col">Played games</th>
             <th scope="col">Summary</th>
+            {% if private_sessions %}
+                <th scope="col">Your private sessions</th>
+            {% endif %}
         </tr>
         </thead>
         <tbody>
@@ -80,7 +83,7 @@
             <td>
                 <ul class="list-unstyled">
                     {% for user in played_games_by_players %}
-                        <li>{{ user.played_games_count }}</li>
+                        <li>{{ user.played_public_games_count }}</li>
                     {% endfor %}
                 </ul>
             </td>
@@ -90,6 +93,16 @@
                         <li>{{ user.score }}</li>
                     {% endfor %}
                 </ul>
+            </td>
+            <td>
+                <ol>
+                    {% if private_sessions %}
+                        There is "{{ private_sessions | length }}" your private session for "{{ game.name }}":
+                        {% for elem in private_sessions %}
+                            <li>{{ elem.session.created_at }}, score: {{ elem.score }}</li>
+                        {% endfor %}
+                    {% endif %}
+                </ol>
             </td>
         </tr>
         </tbody>

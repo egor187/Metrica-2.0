@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'users',
     'games',
     'telegram_bot',
-
+  
     'bootstrap4',
     'anymail',
     'django_filters',
@@ -57,7 +57,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareOnly404',
     'django.middleware.security.SecurityMiddleware',
@@ -69,7 +68,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'rollbar.contrib.django.middleware.RollbarNotifierMiddlewareExcluding404',
-    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROLLBAR = {

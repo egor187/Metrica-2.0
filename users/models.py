@@ -2,11 +2,17 @@ import datetime
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib import admin
 from django.urls import reverse_lazy
 
 
 class CustomUser(AbstractUser):
     avatar = models.ImageField(upload_to='uploads/%Y/%m/%d/', null=True, blank=True)
+    friendship = models.ManyToManyField('self', blank=True, symmetrical=False)
+
+    @admin.display
+    def friendship_repr(self):
+        return list(self.friendship.values_list('username', flat=True))
 
     class Meta:
         ordering = ["username"]

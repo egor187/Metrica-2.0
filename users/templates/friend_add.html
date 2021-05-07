@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block content %}
+    <form method="POST" action="{% url 'users:friend_add' %}">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <div class="form-group">
+            <input class="btn btn-primary" type="submit" value='Add to pack'>
+        </div>
+    </form>
+{% endblock %}

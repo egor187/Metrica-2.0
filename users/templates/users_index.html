@@ -7,7 +7,12 @@
     <div class="row mb-3">
         <div class="col">
             <h4>
-                <a href={% url 'users:users_index' %}>Users</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'users:users_index' %}">Users</a>
+                {% else  %}
+                    <a href="{% url 'users:users_index' %}">Your wolf pack</a>
+                {% endif %}
+                <a href="{% url 'users:friend_add' %}">Add wolf to your pack</a>
             </h4>
         </div>
     </div>
@@ -27,24 +32,29 @@
                 {% for player in users_list %}
                     <tr>
                         <th scope="row">{{ player.id }}</th>
+{% comment %}
                         <td>
-                            {% if user.pk == player.pk %}
-                            <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
+                            {% if user.pk == player.pk or user.is_staff %}
+                                <a href="{{ player.get_absolute_url }}">{{ player.username }}</a>
                             {% else %}
-                            {{ player.username }}
+                                {{ player.username }}
                             {% endif %}
                             <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
                         </td>
-                        {% if user.avatar %}
+{% endcomment %}
+                        <td>
+                            <a href="{{ player.get_absolute_url }}">{{ player.username }}</a>
+                        </td>
+                        {% if player.avatar %}
                             <td>
-                                <img src="{{ user.avatar.url }}" class="card-img-top" alt="...">
+                                <img src="{{ player.avatar.url }}" class="card-img-top" alt="...">
                             </td>
                         {% else %}
                             <td>
                                 <img src="https://source.unsplash.com/random/400x300" class="card-img-top" alt="...">
                             </td>
                         {% endif %}
-                        <td>{{ user.email }}</td>
+                        <td>{{ player.email }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>

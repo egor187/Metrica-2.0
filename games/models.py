@@ -22,6 +22,7 @@ class Games(models.Model):
 class GameSession(models.Model):
     game = models.ForeignKey(Games, on_delete=models.CASCADE, default='default_game', related_name='sessions')
     created_at = models.DateTimeField()
+    is_private = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
