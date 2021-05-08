@@ -59,3 +59,15 @@ class CustomUserAddFriendForm(forms.ModelForm):
             "friendship": "Select the user to whom you want to be friends",
         }
         widgets = {'friendship': django.forms.CheckboxSelectMultiple()}
+
+
+class CustomUserRemoveFriendForm(CustomUserAddFriendForm):
+    class Meta:
+        model = CustomUser
+        fields = [
+            "friendship",
+        ]
+        labels = {
+            "friendship": "Select the user('s) from whom you want to leave friends",
+        }
+        widgets = {'friendship': django.forms.CheckboxSelectMultiple()}

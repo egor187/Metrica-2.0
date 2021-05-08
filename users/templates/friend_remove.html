@@ -2,11 +2,11 @@
 {% load bootstrap4 %}
 
 {% block content %}
-    <form method="POST" action="{% url 'users:friend_add' user.pk %}">
+    <form method="POST" action="{% url 'users:friend_remove' user.pk %}">
         {% csrf_token %}
         {% bootstrap_form form %}
         <div class="form-group">
-            <input class="btn btn-primary" type="submit" value='Add to pack'>
+            <input class="btn btn-primary" type="submit" value='Remove from pack'>
         </div>
     </form>
 {% endblock %}

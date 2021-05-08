@@ -10,9 +10,10 @@
                 {% if user.is_staff %}
                     <a href="{% url 'users:users_index' %}">Users</a>
                 {% else  %}
-                    <a href="{% url 'users:users_index' %}">Your wolf pack</a>
+                    <a href="{% url 'users:users_index' %}">Your wolf pack |</a>
                 {% endif %}
-                <a href="{% url 'users:friend_add' %}">Add wolf to your pack</a>
+                <a href="{% url 'users:friend_add' user.pk %}">Add wolf to your pack |</a>
+                <a href="{% url 'users:friend_remove' user.pk %}">Remove wolf from your pack |</a>
             </h4>
         </div>
     </div>

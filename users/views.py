@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.views.generic.list import ListView, View
 from django.views.generic import DetailView
-from django.views.generic.edit import CreateView, UpdateView, FormView
+from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import ExtractIsoWeekDay
@@ -25,7 +25,7 @@ import jwt
 
 import users.models
 from games.models import Games, GameSession, GameScores
-from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm, CustomUserAddFriendForm
+from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm, CustomUserRemoveFriendForm
 from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar
 
@@ -228,43 +228,119 @@ class UsersUpdateView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class FriendAddView(View):
-    # model = users.models.CustomUser
-    form_class = CustomUserAddFriendForm
+# Realization with vanila View
+# class FriendAddView(View):
+#     form_class = CustomUserAddFriendForm
+#     template_name = 'friend_add.html'
+#     success_url = reverse_lazy('users:users_index')
+#     perm_denied_msg = 'Permission denied. Only owner can manage friends'
+#     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. '{friend}' now can view your profile page"
+#     friendship_exist_msg  = "You're already in '{friend}' friend_list."
+#
+#     def post(self, *args, **kwargs):
+#         form = CustomUserAddFriendForm(self.request.POST)
+#         if form.is_valid():
+#             user = self.request.user
+#             friends = form.cleaned_data['friendship']
+#             for friend in friends:
+#                 if friend.pk == self.request.user.pk:
+#                     continue
+#                 messages.info(
+#                     self.request,
+#                     self.friendship_succeed_msg.format(friend=friend.username)
+#                 ) if not friend.friendship.filter(pk=user.pk).exists() else messages.error(
+#                     self.request,
+#                     self.friendship_exist_msg.format(friend=friend.username)
+#                 )
+#                 friend.friendship.add(user)
+#             return HttpResponseRedirect(reverse_lazy('users:users_index'))
+#         else:
+#             messages.error(self.request, self.perm_denied_msg)
+#
+#             return HttpResponseRedirect(reverse_lazy('users:users_index'))
+#
+#     def get(self, *args, **kwargs):
+#         form = CustomUserAddFriendForm()
+#         form.fields['friendship'].queryset = users.models.CustomUser.objects.exclude(
+#             pk=self.request.user.pk
+#         ).exclude(
+#             friendship__pk=self.request.user.pk
+#         )
+#
+#         return render(self.request, self.template_name, {'form': form})
+
+
+class FriendAddView(UpdateView):
+    model = users.models.CustomUser
     template_name = 'friend_add.html'
+    form_class = CustomUserAddFriendForm
     success_url = reverse_lazy('users:users_index')
+
     perm_denied_msg = 'Permission denied. Only owner can manage friends'
     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. '{friend}' now can view your profile page"
     friendship_exist_msg  = "You're already in '{friend}' friend_list."
 
-    def post(self, *args, **kwargs):
-        form = CustomUserAddFriendForm(self.request.POST)
+    def post(self, request, *args, **kwargs):
+        form = CustomUserAddFriendForm(request.POST)
         if form.is_valid():
-            user = self.request.user
+            user = request.user
             friends = form.cleaned_data['friendship']
             for friend in friends:
-                if friend.pk == self.request.user.pk:
+                if friend.pk == request.user.pk:
                     continue
                 messages.info(
-                    self.request,
+                    request,
                     self.friendship_succeed_msg.format(friend=friend.username)
                 ) if not friend.friendship.filter(pk=user.pk).exists() else messages.error(
-                    self.request,
+                    request,
                     self.friendship_exist_msg.format(friend=friend.username)
                 )
                 friend.friendship.add(user)
-            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+            return HttpResponseRedirect(self.success_url)
         else:
-            print(form.errors)
-            messages.error(self.request, self.perm_denied_msg)
+            messages.error(request, self.perm_denied_msg)
 
-            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+            return HttpResponseRedirect(self.success_url)
 
-    def get(self, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         form = CustomUserAddFriendForm()
         form.fields['friendship'].queryset = users.models.CustomUser.objects.exclude(
             pk=self.request.user.pk
         ).exclude(
+            friendship__pk=self.request.user.pk
+        )
+
+        return render(self.request, self.template_name, {'form': form})
+
+
+class FriendRemoveView(FriendAddView):
+    template_name = 'friend_remove.html'
+    form_class = CustomUserRemoveFriendForm
+
+    friendship_succeed_msg = "You've been succesfully removed from '{friend}' friends. " \
+                             "'{friend}' now can't view your profile page"
+
+    def post(self, request, *args, **kwargs):
+        form = CustomUserRemoveFriendForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            friends = form.cleaned_data['friendship']
+            for friend in friends:
+                messages.info(
+                    request,
+                    self.friendship_succeed_msg.format(friend=friend.username)
+                )
+                friend.friendship.remove(user)
+            return HttpResponseRedirect(self.success_url)
+        else:
+            messages.error(request, self.perm_denied_msg)
+            return HttpResponseRedirect(self.success_url)
+
+    def get(self, *args, **kwargs):
+        form = CustomUserRemoveFriendForm()
+        form.fields['friendship'].queryset = users.models.CustomUser.objects.exclude(
+            pk=self.request.user.pk
+        ).filter(
             friendship__pk=self.request.user.pk
         )
 
