@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block content %}
+    {% bootstrap_messages %}
+    <h4>
+        {% if user.is_staff %}
+            <a href="{% url 'users:users_index' %}">Users</a>
+        {% else  %}
+            <a href="{% url 'users:users_index' %}">Your wolf pack</a>
+        {% endif %}
+    </h4>
+<br>
+    {% if income_friendship_requests %}
+    <div class="row mb-3">
+        <div class="col">
+            <h4>
+                Income friendship requests
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <table class="table table-borderless">
+                <thead>
+                <tr>
+                    <th scope="col">From who</th>
+                    <th scope="col">Created at</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for income_fr_req in income_friendship_requests %}
+                    <tr>
+                        <th scope="row">
+                            {{ income_fr_req.from_user.username }}
+                        </th>
+                        <td>
+                            {{ income_fr_req.created_at }}
+                        </td>
+                        <td>
+                            {{ income_fr_req.message }}
+                        </td>
+                        <td>
+                            {% if income_fr_req.is_accepted %}
+                                accepted at: {{ income_fr_req.updated_at }}
+                            {% elif income_fr_req.is_rejected %}
+                                rejected at: {{ income_fr_req.updated_at }}
+                            {% endif %}
+
+{% comment %}
+                            {% if income_fr_req.is_accepted is Null %}
+                                <td>
+                                    <a class="btn btn-success" href="{% url 'users:friendship_request_proceed' income_fr_req.id 'acc' %}">Accept</a>
+                                    <a class="btn btn-danger" href="{% url 'users:friendship_request_proceed' income_fr_req.id 'dec' %}">Decline</a>
+                                </td>
+                            {% endif %}
+{% endcomment %}
+
+                            {% if income_fr_req.is_accepted is Null %}
+                                <td>
+                                    <form method="POST" action="{% url 'users:friendship_request_proceed' income_fr_req.id 'acc' %}">
+                                        {% csrf_token %}
+                                        {% bootstrap_form form %}
+                                        <div class="form-group">
+                                            <input class="btn btn-success" type="submit" value='Accept'>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{% url 'users:friendship_request_proceed' income_fr_req.id 'dec' %}">
+                                        {% csrf_token %}
+                                        {% bootstrap_form form %}
+                                        <div class="form-group">
+                                            <input class="btn btn-danger" type="submit" value='Decline'>
+                                        </div>
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        <h3>
+            No income friendship requests for you
+        </h3>
+    {% endif %}
+
+    {% if outcome_friendship_requests %}
+    <div class="row mb-3">
+        <div class="col">
+            <h4>
+                Outcome friendship requests
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <table class="table table-borderless">
+                <thead>
+                <tr>
+                    <th scope="col">To who</th>
+                    <th scope="col">Created at</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for outcome_fr_req in outcome_friendship_requests %}
+                    <tr>
+                        <th scope="row">
+                            {{ outcome_fr_req.to_user.username }}
+                        </th>
+                        <td>
+                            {{ outcome_fr_req.created_at }}
+                        </td>
+                        <td>
+                            {{ outcome_fr_req.message }}
+                        </td>
+                        <td>
+                            {% if outcome_fr_req.is_accepted %}
+                                accepted at: {{ outcome_fr_req.updated_at }}
+                            {% elif outcome_fr_req.is_rejected %}
+                                rejected at: {{ outcome_fr_req.updated_at }}
+                            {% endif %}
+                            {% if outcome_fr_req.is_accepted is Null %}
+                                <td>
+                                    <form method="POST" action="{% url 'users:friendship_request_proceed' outcome_fr_req.id 'cancel' %}">
+                                        {% csrf_token %}
+                                        {% bootstrap_form form %}
+                                        <div class="form-group">
+                                            <input class="btn btn-danger" type="submit" value='Withdraw request'>
+                                        </div>
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        <h3>
+            You didn't make any friendship request
+        </h3>
+    {% endif %}
+{% endblock content %}

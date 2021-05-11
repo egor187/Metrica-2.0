@@ -38,15 +38,24 @@ class GamesDetailView(DetailView):
         filtered_users = []
         for user in users:
             sessions = []
-            if self.request.user.pk != user.pk:
-                for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+            for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+                if self.request.user.pk != user.pk:
                     if score.game_session.is_private:
                         user.played_public_games_count -= 1
                     else:
                         sessions.append(score.game_session)
-            else:
-                for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+                else:
                     sessions.append(score.game_session)
+
+            # if self.request.user.pk != user.pk:
+            #     for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+            #         if score.game_session.is_private:
+            #             user.played_public_games_count -= 1
+            #         else:
+            #             sessions.append(score.game_session)
+            # else:
+            #     for score in user.scores.filter(game_session__game__pk=self.kwargs["pk"]):
+            #         sessions.append(score.game_session)
 
             if sessions:
                 filtered_users.append(user)

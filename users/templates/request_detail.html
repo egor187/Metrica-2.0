@@ -4,8 +4,7 @@
     <div class="row mb-3">
         <div class="col">
             <h4>
-                <a href="{% url 'users:users_index' %}">{% if user.is_staff %}Users{% else %}Your wolf pack{% endif %}</a> / {{ object.username }}
-                <a href="{% url 'users:friendship_requests_list' %}">| Friendship requests</a>
+                <a href={% url 'users:users_index' %}>{% if user.is_staff %}Users{% else %}Your wolf pack{% endif %}</a> / {{ object.username }}
             </h4>
         </div>
     </div>

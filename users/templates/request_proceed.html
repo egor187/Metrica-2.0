@@ -1,0 +1,29 @@
+{% comment %}
+Useless template. Forms render by FriendRequestListView with FormMixin directly in list of friendship requests.
+This helped to avoid unnecessary forms rendering and form of confirmation of the action on the page.
+Referenced FriendRequestProceedView don't have access to template form rendering process (but it still can under the hood)
+{% endcomment %}
+
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block content %}
+    <form method="POST" action="{% url 'users:friendship_request_proceed' friendship_request.id friendship_request_answer %}">
+        {% if friendship_request_answer == 'acc' %}
+            <p>Are you sure want too accept this request from '{{ from_user }}'?</p>
+        {% else %}
+            <p>Are you sure want too decline this request from '{{ from_user }}'?</p>
+        {% endif %}
+
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <div class="form-group">
+            {% if friendship_request_answer == 'acc' %}
+                <input class="btn btn-primary" type="submit" value='Accept'>
+            {% else %}
+                <input class="btn btn-primary" type="submit" value='Decline'>
+            {% endif %}
+            <a class="btn btn-danger" href="{% url 'users:users_index' %}">I've change my mind</a>
+        </div>
+    </form>
+{% endblock %}

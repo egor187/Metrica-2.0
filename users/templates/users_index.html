@@ -14,6 +14,7 @@
                 {% endif %}
                 <a href="{% url 'users:friend_add' user.pk %}">Add wolf to your pack |</a>
                 <a href="{% url 'users:friend_remove' user.pk %}">Remove wolf from your pack |</a>
+                <a href="{% url 'users:friendship_requests_list' %}">Friendship requests |</a>
             </h4>
         </div>
     </div>
