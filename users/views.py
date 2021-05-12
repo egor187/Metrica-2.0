@@ -57,6 +57,12 @@ class UsersListView(LoginRequiredMixin, ListView):
     template_name = 'users_index.html'
     context_object_name = 'users_list'
 
+    def __init__(self, **kwargs):
+        """
+        Override parent method to add custom attribute for further purposes
+        """
+        super().__init__()
+        self.friends_list = ''
 
     def get_queryset(self):
         """
@@ -76,6 +82,13 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
     model = users.models.CustomUser
     template_name = 'users_detail.html'
     perm_denied_msg = 'Permission denied. Only owner can view profile'
+
+    def __init__(self, **kwargs):
+        """
+        Override parent method to add custom attribute for further purposes
+        """
+        super().__init__(kwargs)
+        self.friends_pk_list = ''
 
     def get(self, request, *args, **kwargs):
         """
@@ -108,7 +121,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 'Email'
             )
         )
-        if self.request.user.pk != self.kwargs["pk"]:
+        if self.request.user.pk != self.kwargs.get('pk'):
             games = Games.objects.prefetch_related('sessions').filter(
                 sessions__scores__user__pk=self.kwargs['pk'],
                 sessions__is_private=False,
@@ -117,7 +130,6 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
             games = Games.objects.prefetch_related('sessions').filter(
                 sessions__scores__user__pk=self.kwargs['pk'],
             ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
-
 
         games_data = []
         for game in games:
@@ -150,7 +162,6 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
             games_data.append(game_data)
 
         context["games"] = games_data
-
 
         if self.request.user.pk == self.kwargs['pk']:
             context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
