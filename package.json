@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "parcel build static/src/js/index.js --out-file main --out-dir static/dist",
-    "start": "parcel static/src/js/index.js --hmr-port 34471 --out-file main"
+    "start": "parcel static/src/js/index.js --hmr-port 34471 --out-file main --out-dir static/dist"
   },
   "repository": {
     "type": "git",
@@ -19,5 +19,8 @@
   "homepage": "https://github.com/rokkoko/Metrica-2.0#readme",
   "devDependencies": {
     "parcel-bundler": "^1.12.5"
+  },
+  "dependencies": {
+    "date-fns": "^2.21.1"
   }
 }

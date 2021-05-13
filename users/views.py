@@ -87,7 +87,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         """
         Override parent method to add custom attribute for further purposes
         """
-        super().__init__(kwargs)
+        super().__init__()
         self.friends_pk_list = ''
 
     def get(self, request, *args, **kwargs):
@@ -154,7 +154,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
 
             game_data = {
                 "name": game.name,
-                "cover": game.cover_art,
+                "cover": game.cover_art.url,
                 "total_score": game.total_score,
                 "times_played": game.times_played,
                 "sessions": sessions_data
