@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django_filters',
     'django_summernote',
     'swagger_render',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Metrica_project.wsgi.application'
+ASGI_APPLICATION = 'Metrica_project.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

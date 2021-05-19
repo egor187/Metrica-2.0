@@ -59,10 +59,50 @@ class UsersListView(LoginRequiredMixin, ListView):
 
     def __init__(self, **kwargs):
         """
-        Override parent method to add custom attribute for further purposes
+        Override parent method to add custom self attribute 'friends_list' for further purposes
         """
         super().__init__()
         self.friends_list = ''
+
+    def get(self, request, *args, **kwargs):
+        """
+        Override parent method to render by 'messages' framework notice for each users about
+        income new friendship requests
+        """
+        new_friendship_requests_senders = [
+            elem['from_user__username'] for elem in list(
+                users.models.FriendshipRequest.objects.filter(is_rejected=None).only(
+                    'pk',
+                    'from_user',
+                    'to_user'
+                ).filter(to_user=request.user.pk).values('from_user__username'))
+        ]
+        for sender in new_friendship_requests_senders:
+            messages.info(request, f"You have a friendship request from '{sender}'")
+        return super(UsersListView, self).get(request, *args, **kwargs)
+
+    #  Realiztaion websockets from ListView CBV
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super(UsersListView, self).get_context_data()
+        # Если данные о новых кандидатах в друзья приходят в GET параметрах - достаем их оттуда.
+        # if self.request.GET:
+        #     context['new_friendship_requests_receivers'] = self.request.GET.get('to_user')
+
+        #  Если данные о новых кандидатах в друзья приходят через COOKIES - дастаем их оттуда и передаем в контекст
+        #  на фронт для использования в js-скрипте и работе с WebSocket
+        # if self.request.COOKIES.get('new_friends'):
+        #     context['new_friendship_requests_receivers'] = self.request.COOKIES.get('new_friends')
+
+        #  Альтернативный более безопасный вариант получения данных о новых (нерассмотренных) запросах на дружбу от юзера
+        # context['new_friendship_requests_receivers'] = list(
+        #     users.models.FriendshipRequest.objects.filter(
+        #         from_user=self.request.user,
+        #         is_accepted=None
+        #     ).values_list(
+        #         'to_user',
+        #         flat=True)
+        # )
+        # return context
 
     def get_queryset(self):
         """
@@ -246,6 +286,15 @@ class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
         """
         context = super().get_context_data()
         context['outcome_friendship_requests'] = users.models.FriendshipRequest.objects.filter(from_user=self.request.user)
+        context['new_friends'] = list(
+            users.models.FriendshipRequest.objects.filter(
+                from_user=self.request.user,
+                is_accepted=None
+            ).values(
+                'to_user',
+                'from_user__username'
+            )
+        )
         return context
 
 
@@ -254,7 +303,7 @@ class FriendRequestProceedView(LoginRequiredMixin, UpdateView):
     template_name = 'request_proceed.html'
     pk_url_kwarg = 'request_pk'
     form_class = FriendshipRequestAcceptForm
-    success_url = reverse_lazy('users:users_index')
+    success_url = reverse_lazy('users:friendship_requests_list')
     context_object_name = 'friendship_request'
 
     perm_denied_msg = 'Permission denied. Only owner can manage friends'
@@ -456,7 +505,17 @@ class FriendAddView(CreateView):
                     message=message,
                 )
                 friendship_request.save()
-            return HttpResponseRedirect(self.success_url)
+            #  Передавая между вьюхами инфу о кандидатах в друзья через GET параметры можно вручную (изменив их)
+            #  отправить уведомление НЕ ТОМУ юзеру. Поэтому используюм COOKIES для передачи данных
+
+            # get_params = {
+            #     'from_user': request.user.username,
+            #     'to_user': list(friends.values_list("pk", flat=True))
+            # }
+            # return HttpResponseRedirect(f"{self.success_url}?{urlencode(get_params)}")
+            response = HttpResponseRedirect(self.success_url)
+            # response.set_cookie('new_friends', list(friends.values_list("pk", flat=True)), max_age=5)
+            return response
         else:
             messages.error(request, self.perm_denied_msg)
             return HttpResponseRedirect(self.success_url)

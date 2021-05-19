@@ -138,7 +138,7 @@
                                         {% csrf_token %}
                                         {% bootstrap_form form %}
                                         <div class="form-group">
-                                            <input class="btn btn-danger" type="submit" value='Withdraw request'>
+                                            <input id="withdraw-request" class="btn btn-danger" type="submit" value='Withdraw request'>
                                         </div>
                                     </form>
                                 </td>
@@ -155,4 +155,24 @@
             You didn't make any friendship request
         </h3>
     {% endif %}
+
+<input id="notify-new-friends" class="btn btn-danger" type="button" value='Notify my friends'>
+
+{{ new_friends | json_script:"new_friends" }}
+<script>
+            const socket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/'
+            );
+
+            document.querySelector('#notify-new-friends').onclick = function(e) {
+                const data = JSON.parse(
+                    document.getElementById("new_friends").textContent
+                );
+                socket.send(JSON.stringify({
+                'message': data
+            }));
+        };
+</script>
 {% endblock content %}
