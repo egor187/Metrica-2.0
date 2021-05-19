@@ -60,10 +60,50 @@ class UsersListView(LoginRequiredMixin, ListView):
 
     def __init__(self, **kwargs):
         """
-        Override parent method to add custom attribute for further purposes
+        Override parent method to add custom self attribute 'friends_list' for further purposes
         """
         super().__init__()
         self.friends_list = ''
+
+    def get(self, request, *args, **kwargs):
+        """
+        Override parent method to render by 'messages' framework notice for each users about
+        income new friendship requests
+        """
+        new_friendship_requests_senders = [
+            elem['from_user__username'] for elem in list(
+                users.models.FriendshipRequest.objects.filter(is_rejected=None).only(
+                    'pk',
+                    'from_user',
+                    'to_user'
+                ).filter(to_user=request.user.pk).values('from_user__username'))
+        ]
+        for sender in new_friendship_requests_senders:
+            messages.info(request, f"You have a friendship request from '{sender}'")
+        return super(UsersListView, self).get(request, *args, **kwargs)
+
+    #  Realiztaion websockets from ListView CBV
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super(UsersListView, self).get_context_data()
+        # Если данные о новых кандидатах в друзья приходят в GET параметрах - достаем их оттуда.
+        # if self.request.GET:
+        #     context['new_friendship_requests_receivers'] = self.request.GET.get('to_user')
+
+        #  Если данные о новых кандидатах в друзья приходят через COOKIES - дастаем их оттуда и передаем в контекст
+        #  на фронт для использования в js-скрипте и работе с WebSocket
+        # if self.request.COOKIES.get('new_friends'):
+        #     context['new_friendship_requests_receivers'] = self.request.COOKIES.get('new_friends')
+
+        #  Альтернативный более безопасный вариант получения данных о новых (нерассмотренных) запросах на дружбу от юзера
+        # context['new_friendship_requests_receivers'] = list(
+        #     users.models.FriendshipRequest.objects.filter(
+        #         from_user=self.request.user,
+        #         is_accepted=None
+        #     ).values_list(
+        #         'to_user',
+        #         flat=True)
+        # )
+        # return context
 
     def get_queryset(self):
         """
@@ -175,6 +215,33 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 sessions__is_private=False
             ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
+        games = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(total_score=Sum("sessions__scores__score"), times_played=Count("sessions"))
+
+        games_data = []
+        for game in games:
+            sessions_data = []
+            for session in game.sessions.filter(scores__user=self.get_object()):
+                session_data = {
+                    "date": session.created_at,
+                    "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                }
+                sessions_data.append(session_data)
+            game_data = {
+                "name": game.name,
+                "cover": game.cover_art,
+                "total_score": game.total_score,
+                "times_played": game.times_played,
+                "sessions": sessions_data
+            }
+            games_data.append(game_data)
+
+        context["games"] = games_data
+
+        context["last_five_games_played"] = Games.objects.prefetch_related('sessions').filter(
+            sessions__scores__user__pk=self.kwargs['pk']
+        ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
         context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
 
@@ -228,6 +295,15 @@ class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
         context['filter_outcome'] = FriendshipRequestFilter(
             self.request.GET,
             queryset=users.models.FriendshipRequest.objects.filter(to_user=self.request.user)
+
+        context['new_friends'] = list(
+            users.models.FriendshipRequest.objects.filter(
+                from_user=self.request.user,
+                is_accepted=None
+            ).values(
+                'to_user',
+                'from_user__username'
+            )
         )
         return context
 
@@ -237,7 +313,7 @@ class FriendRequestProceedView(LoginRequiredMixin, UpdateView):
     template_name = 'request_proceed.html'
     pk_url_kwarg = 'request_pk'
     form_class = FriendshipRequestAcceptForm
-    success_url = reverse_lazy('users:users_index')
+    success_url = reverse_lazy('users:friendship_requests_list')
     context_object_name = 'friendship_request'
 
     perm_denied_msg = 'Permission denied. Only owner can manage friends'
@@ -439,7 +515,17 @@ class FriendAddView(CreateView):
                     message=message,
                 )
                 friendship_request.save()
-            return HttpResponseRedirect(self.success_url)
+            #  Передавая между вьюхами инфу о кандидатах в друзья через GET параметры можно вручную (изменив их)
+            #  отправить уведомление НЕ ТОМУ юзеру. Поэтому используюм COOKIES для передачи данных
+
+            # get_params = {
+            #     'from_user': request.user.username,
+            #     'to_user': list(friends.values_list("pk", flat=True))
+            # }
+            # return HttpResponseRedirect(f"{self.success_url}?{urlencode(get_params)}")
+            response = HttpResponseRedirect(self.success_url)
+            # response.set_cookie('new_friends', list(friends.values_list("pk", flat=True)), max_age=5)
+            return response
         else:
             messages.error(request, self.perm_denied_msg)
             return HttpResponseRedirect(self.success_url)
@@ -464,6 +550,7 @@ class FriendRemoveView(FriendAddView):
 
     friendship_succeed_msg = "You've been succesfully removed from '{friend}' friends. " \
                              "'{friend}' now can't view your profile page"
+    no_friends_msg = "You don't have a single friend yet"
 
     def post(self, request, *args, **kwargs):
         form = CustomUserRemoveFriendForm(request.POST)
@@ -484,11 +571,15 @@ class FriendRemoveView(FriendAddView):
 
     def get(self, request, *args, **kwargs):
         form = CustomUserRemoveFriendForm()
-        form.fields['friendship'].queryset = users.models.CustomUser.objects.get(
+        user_friends = users.models.CustomUser.objects.get(
             pk=request.user.pk
         ).friendship.all()
 
-        return render(self.request, self.template_name, {'form': form})
+        if user_friends:
+            form.fields['friendship'].queryset = user_friends
+            return render(self.request, self.template_name, {'form': form})
+        messages.error(request, self.no_friends_msg)
+        return HttpResponseRedirect(self.success_url)
 
 
 def invite_to_register(request):

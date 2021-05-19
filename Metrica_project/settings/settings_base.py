@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django_filters',
     'django_summernote',
     'swagger_render',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Metrica_project.wsgi.application'
+ASGI_APPLICATION = 'Metrica_project.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -221,3 +231,14 @@ SUMMERNOTE_CONFIG = {
 PROJECT_ROOT_URL = os.getenv('PROJECT_ROOT_URL')
 
 SWAGGER_YAML_FILENAME = '/docs/openapi.yml'
+
+# From Django 3.0, this setting is necessary for iframe (for SUMMERNOTE in our case)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_THEME = 'bs4'
+SUMMERNOTE_CONFIG = {
+    'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+    }
+}

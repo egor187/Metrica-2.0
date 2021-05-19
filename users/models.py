@@ -73,6 +73,7 @@ class FriendshipRequest(models.Model):
                 check=Q(is_rejected=True) & Q(is_accepted=False) | Q(is_rejected=False) & Q(is_accepted=True)
             )
         ]
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Friendship request from {self.from_user.username} " \
