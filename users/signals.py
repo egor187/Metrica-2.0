@@ -2,7 +2,7 @@ from django.core.mail import send_mail
 
 
 def friendship_post_save_signal_receiver(sender, **kwargs):
-    print('Correct!')
+    print('"post_save" signal working correct!')
 
 
 def email_for_friendship_request_proccess(sender, **kwargs):

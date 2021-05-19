@@ -29,6 +29,7 @@ from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm
     FriendshipRequestAcceptForm
 from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar
+from .filter import FriendshipRequestFilter
 
 load_dotenv(find_dotenv())
 site_root_url = settings.PROJECT_ROOT_URL
@@ -286,6 +287,15 @@ class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
         """
         context = super().get_context_data()
         context['outcome_friendship_requests'] = users.models.FriendshipRequest.objects.filter(from_user=self.request.user)
+
+        context['filter_income'] = FriendshipRequestFilter(
+            self.request.GET,
+            queryset=users.models.FriendshipRequest.objects.filter(to_user=self.request.user)
+        )
+        context['filter_outcome'] = FriendshipRequestFilter(
+            self.request.GET,
+            queryset=users.models.FriendshipRequest.objects.filter(to_user=self.request.user)
+
         context['new_friends'] = list(
             users.models.FriendshipRequest.objects.filter(
                 from_user=self.request.user,

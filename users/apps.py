@@ -15,8 +15,12 @@ class UsersConfig(AppConfig):
             sender=FriendshipRequest,
             dispatch_uid='my_unique_identifier'
         )
-        post_save.connect(
-            email_for_friendship_request_proccess,
-            sender=FriendshipRequest,
-            dispatch_uid='my_unique_identifier2'
-        )
+
+        #  on "dev" turned off because Mailgun account need to upgrade to set custom mail domain and send mails
+        #  unlimited number of recipients, not just authorized recipients.
+
+        # post_save.connect(
+        #     email_for_friendship_request_proccess,
+        #     sender=FriendshipRequest,
+        #     dispatch_uid='my_unique_identifier2'
+        # )
