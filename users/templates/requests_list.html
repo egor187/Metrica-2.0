@@ -7,8 +7,10 @@
         {% if user.is_staff %}
             <a href="{% url 'users:users_index' %}">Users</a>
         {% else  %}
-            <a href="{% url 'users:users_index' %}">Your wolf pack</a>
+            <a href="{% url 'users:users_index' %}">Your wolf pack |</a>
         {% endif %}
+        <a href="{% url 'users:friend_add' user.pk %}">Add wolf to your pack |</a>
+        <a href="{% url 'users:friend_remove' user.pk %}">Remove wolf from your pack |</a>
     </h4>
 <br>
     {% if income_friendship_requests %}
@@ -91,6 +93,7 @@
         <h3>
             No income friendship requests for you
         </h3>
+        <br>
     {% endif %}
 
     {% if outcome_friendship_requests %}
@@ -149,16 +152,19 @@
                 </tbody>
             </table>
         </div>
+        {% if new_friends %}
+        <input id="notify-new-friends" class="btn btn-danger" type="button" value='Notify my friends'>
+        {% endif %}
     </div>
     {% else %}
         <h3>
             You didn't make any friendship request
         </h3>
+        <br>
     {% endif %}
 
-<input id="notify-new-friends" class="btn btn-danger" type="button" value='Notify my friends'>
-
 {{ new_friends | json_script:"new_friends" }}
+
 <script>
             const socket = new WebSocket(
             'ws://'
@@ -172,7 +178,7 @@
                 );
                 socket.send(JSON.stringify({
                 'message': data
-            }));
-        };
+                }));
+            };
 </script>
 {% endblock content %}

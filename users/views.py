@@ -540,6 +540,7 @@ class FriendRemoveView(FriendAddView):
 
     friendship_succeed_msg = "You've been succesfully removed from '{friend}' friends. " \
                              "'{friend}' now can't view your profile page"
+    no_friends_msg = "You don't have a single friend yet"
 
     def post(self, request, *args, **kwargs):
         form = CustomUserRemoveFriendForm(request.POST)
@@ -560,11 +561,15 @@ class FriendRemoveView(FriendAddView):
 
     def get(self, request, *args, **kwargs):
         form = CustomUserRemoveFriendForm()
-        form.fields['friendship'].queryset = users.models.CustomUser.objects.get(
+        user_friends = users.models.CustomUser.objects.get(
             pk=request.user.pk
         ).friendship.all()
 
-        return render(self.request, self.template_name, {'form': form})
+        if user_friends:
+            form.fields['friendship'].queryset = user_friends
+            return render(self.request, self.template_name, {'form': form})
+        messages.error(request, self.no_friends_msg)
+        return HttpResponseRedirect(self.success_url)
 
 
 def invite_to_register(request):

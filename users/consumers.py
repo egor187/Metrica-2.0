@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 
 
 class MyConsumer(WebsocketConsumer):
-    groups = ['friendship_messages',]
+    groups = ['friendship_messages', ]
 
     def connect(self):
         """
@@ -25,16 +25,19 @@ class MyConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
         if text_data_json['message']:
             message_json = text_data_json['message']
-            #  Send message to group
+            #  Send event to group
             async_to_sync(self.channel_layer.group_send)(
-            self.groups[0],
-            {
-                'type': 'friendship_request_message',
-                'message': message_json
-            }
-        )
+                self.groups[0],
+                {
+                    #  'type' is a key corresponding to the name of the method that should be invoked on
+                    #  consumers that receive the event.
+                    'type': 'friendship_request_message',
+                    'message': message_json
+                }
+            )
 
     #  Receive message from group
+    #  Name of 'receiver' class method must be equal to 'type' key of sending event
     def friendship_request_message(self, event):
         message = event['message']
         friendship_request_sender = message[0]["from_user__username"]
