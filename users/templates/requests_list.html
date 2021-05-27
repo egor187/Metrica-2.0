@@ -7,10 +7,11 @@
         {% if user.is_staff %}
             <a href="{% url 'users:users_index' %}">Users</a>
         {% else  %}
-            <a href="{% url 'users:users_index' %}">Your wolf pack</a>
+            <a href="{% url 'users:users_index' %}">Your wolf pack |</a>
         {% endif %}
+        <a href="{% url 'users:friend_add' user.pk %}">Add wolf to your pack |</a>
+        <a href="{% url 'users:friend_remove' user.pk %}">Remove wolf from your pack |</a>
     </h4>
-<br>
     {% if income_friendship_requests %}
     <div class="row mb-3">
         <div class="col">
@@ -19,7 +20,11 @@
             </h4>
         </div>
     </div>
-
+<br>
+    <form method="get">
+        {% bootstrap_form filter_income.form %}
+        {% bootstrap_button "Показать" button_class="btn-success" %}
+    </form>
     <div class="row">
         <div class="col">
             <table class="table table-borderless">
@@ -33,7 +38,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for income_fr_req in income_friendship_requests %}
+                {% comment %}{% for income_fr_req in income_friendship_requests %}{% endcomment %}
+                {% for income_fr_req in filter_income.qs %}
                     <tr>
                         <th scope="row">
                             {{ income_fr_req.from_user.username }}
@@ -50,16 +56,6 @@
                             {% elif income_fr_req.is_rejected %}
                                 rejected at: {{ income_fr_req.updated_at }}
                             {% endif %}
-
-{% comment %}
-                            {% if income_fr_req.is_accepted is Null %}
-                                <td>
-                                    <a class="btn btn-success" href="{% url 'users:friendship_request_proceed' income_fr_req.id 'acc' %}">Accept</a>
-                                    <a class="btn btn-danger" href="{% url 'users:friendship_request_proceed' income_fr_req.id 'dec' %}">Decline</a>
-                                </td>
-                            {% endif %}
-{% endcomment %}
-
                             {% if income_fr_req.is_accepted is Null %}
                                 <td>
                                     <form method="POST" action="{% url 'users:friendship_request_proceed' income_fr_req.id 'acc' %}">
@@ -91,6 +87,7 @@
         <h3>
             No income friendship requests for you
         </h3>
+        <br>
     {% endif %}
 
     {% if outcome_friendship_requests %}
@@ -101,7 +98,11 @@
             </h4>
         </div>
     </div>
-
+<br>
+<form method="get">
+    {% bootstrap_form filter_outcome.form %}
+    {% bootstrap_button "Показать" button_class="btn-success" %}
+</form>
     <div class="row">
         <div class="col">
             <table class="table table-borderless">
@@ -115,7 +116,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for outcome_fr_req in outcome_friendship_requests %}
+                {% for outcome_fr_req in filter_outcome.qs %}
                     <tr>
                         <th scope="row">
                             {{ outcome_fr_req.to_user.username }}
@@ -138,7 +139,7 @@
                                         {% csrf_token %}
                                         {% bootstrap_form form %}
                                         <div class="form-group">
-                                            <input class="btn btn-danger" type="submit" value='Withdraw request'>
+                                            <input id="withdraw-request" class="btn btn-danger" type="submit" value='Withdraw request'>
                                         </div>
                                     </form>
                                 </td>
@@ -149,10 +150,33 @@
                 </tbody>
             </table>
         </div>
+        {% if new_friends %}
+        <input id="notify-new-friends" class="btn btn-danger" type="button" value='Notify my friends'>
+        {% endif %}
     </div>
     {% else %}
         <h3>
             You didn't make any friendship request
         </h3>
+        <br>
     {% endif %}
+
+{{ new_friends | json_script:"new_friends" }}
+
+<script>
+            const socket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/'
+            );
+
+            document.querySelector('#notify-new-friends').onclick = function(e) {
+                const data = JSON.parse(
+                    document.getElementById("new_friends").textContent
+                );
+                socket.send(JSON.stringify({
+                'message': data
+                }));
+            };
+</script>
 {% endblock content %}
