@@ -17,6 +17,9 @@ class CustomUser(AbstractUser):
 
     class Meta:
         ordering = ["username"]
+        indexes = [
+            models.Index(fields=['username']),
+        ]
 
     def __str__(self):
         return self.get_full_name()
