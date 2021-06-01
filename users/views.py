@@ -139,7 +139,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 for session in game.sessions.filter(scores__user=self.get_object(), is_private=False).distinct():
                     session_data = {
                         "date": session.created_at,
-                        "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
+                        "score": GameScores.objects.filter(user=self.get_object(), game_session=session).aggregate(Sum('score')),
                     }
                     sessions_data.append(session_data)
             else:
@@ -198,7 +198,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
 
 class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
     """
-    Inherits from FormMixin for getting opportunity to render form for 'get' method in ListView CBV
+    Also inherits from FormMixin for getting opportunity to render form for 'get' method in ListView CBV
     """
     model = users.models.FriendshipRequest
     template_name = 'requests_list.html'
@@ -221,8 +221,7 @@ class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
         Override parent method to achieve possibility for two kinds fo requests rendering in templates
         """
         context = super().get_context_data()
-        context['outcome_friendship_requests'] = users.models.FriendshipRequest.objects.filter(from_user=self.request.user)
-
+        # context['outcome_friendship_requests'] = users.models.FriendshipRequest.objects.filter(from_user=self.request.user)
         context['filter_income'] = FriendshipRequestFilter(
             self.request.GET,
             queryset=users.models.FriendshipRequest.objects.filter(to_user=self.request.user)

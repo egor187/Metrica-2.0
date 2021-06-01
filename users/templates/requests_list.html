@@ -10,7 +10,7 @@
             <a href="{% url 'users:users_index' %}">Your wolf pack</a>
         {% endif %}
     </h4>
-    {% if income_friendship_requests %}
+    {% if filter_income.qs %}
     <div class="row mb-3">
         <div class="col">
             <h4>
@@ -36,11 +36,10 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% comment %}{% for income_fr_req in income_friendship_requests %}{% endcomment %}
                 {% for income_fr_req in filter_income.qs %}
                     <tr>
                         <th scope="row">
-                            {{ income_fr_req.from_user.username }}
+                            {{ income_fr_req.from_user }}
                         </th>
                         <td>
                             {{ income_fr_req.created_at }}
@@ -87,7 +86,7 @@
         </h3>
     {% endif %}
 
-    {% if outcome_friendship_requests %}
+    {% if filter_outcome.qs %}
     <div class="row mb-3">
         <div class="col">
             <h4>

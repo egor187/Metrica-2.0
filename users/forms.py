@@ -65,7 +65,7 @@ class CustomUserAddFriendForm(forms.Form):
     and 'message' field in FriendshipRequest instance (two different models)
     """
     friends_candidates = forms.ModelMultipleChoiceField(
-        queryset=CustomUser.objects.all().only('friendship'),
+        queryset=CustomUser.objects.all(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'special'}))
     message = forms.CharField(widget=forms.Textarea(attrs={'class': 'special'}))
 
