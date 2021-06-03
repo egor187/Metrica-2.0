@@ -34,7 +34,10 @@ GAME_NAME, GAME_COVER = range(2)
 
 class ReplyToMessageFilter(UpdateFilter):
     def filter(self, update):
-        return bool(update.message.reply_to_message)
+        if update.message.reply_to_message:
+            return update.message.reply_to_message.from_user.is_bot
+        else:
+            return
 
 
 reply_to_message_filter = ReplyToMessageFilter()
