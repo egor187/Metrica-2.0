@@ -168,3 +168,15 @@ def stats_repr(game):
                 game_session__game=game_object
             ).filter(user=user).aggregate(Sum('score'))['score__sum']
     return result_msg_dict
+
+
+def add_giffer_scores(user_name, score):
+    game_name = 'botyara'
+    game = Games.objects.get_or_create(name=game_name)[0]
+    game_session_object = add_game_session_into_db(game)
+    user = CustomUser.objects.get_or_create(username=user_name)[0]
+    GameScores.objects.create(
+        game_session=game_session_object,
+        user=user,
+        score=score,
+    )

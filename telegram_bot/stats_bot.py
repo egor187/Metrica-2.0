@@ -8,11 +8,11 @@ from django.urls import reverse_lazy
 from django.utils.text import format_lazy
 
 from telegram import Bot, Update, ForceReply
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, ConversationHandler
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, ConversationHandler, UpdateFilter
 from dotenv import load_dotenv, find_dotenv
 
 from Metrica_project.income_msg_parser import parse_message
-from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name
+from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name, add_giffer_scores
 from .db_actions import top_3_week_players_repr_public_sessions
 from telegram_bot.models import Chat
 
@@ -32,6 +32,14 @@ GAME_CHECK_URL = format_lazy("{}{}", site_root_url, reverse_lazy('games:game_che
 GAME_NAME, GAME_COVER = range(2)
 
 
+class ReplyToMessageFilter(UpdateFilter):
+    def filter(self, update):
+        return bool(update.message.reply_to_message)
+
+
+reply_to_message_filter = ReplyToMessageFilter()
+
+
 class StatsBot:
 
     def __init__(self, token):
@@ -42,9 +50,12 @@ class StatsBot:
         self.dispatcher.add_handler(CommandHandler("register_user", register_user_command))
         self.dispatcher.add_handler(CommandHandler("set_stats_scheduler", set_weekly_top_players_stats_schedule))
         self.dispatcher.add_handler(CommandHandler("unset_stats_scheduler", unset_weekly_top_players_stats_schedule))
+        self.dispatcher.add_handler(CommandHandler("cancel", cancel))
         self.dispatcher.add_handler(conv_handler_add_game)
         self.dispatcher.add_handler(conv_handler_weekly_stats)
-        self.dispatcher.add_handler(MessageHandler(~Filters.command, process_bot_reply_message))
+        self.dispatcher.add_handler(MessageHandler(~Filters.command & reply_to_message_filter & (~Filters.animation), process_bot_reply_message))
+        self.dispatcher.add_handler(MessageHandler(Filters.animation, animation_callback))
+
 
     def process_update(self, request):
         update = Update.de_json(request, self.bot)
@@ -53,6 +64,13 @@ class StatsBot:
         logger.debug(f'Stats request processed successfully: {update.update_id}')
         chat_id = update.effective_chat.id
         Chat.objects.get_or_create(chat_id=chat_id)
+
+
+def animation_callback(update, context):
+    user_name = update.message.from_user.username
+    score = 1
+    update.message.reply_text(f"Статы (+1) ботяры '{user_name}' занесены в Метрику")
+    add_giffer_scores(user_name, score)
 
 
 def add_game_command(update, context):
@@ -73,7 +91,7 @@ def register_user_command(update, context):
     # Store the command in context to check later in message processors
     context.user_data["last_command"] = "REGISTER"
     update.message.reply_text(
-        f'Зарегистрировать юзера',
+        f'Зарегистрировать юзера. "/cancel" - чтобы отменить процедуру',
         reply_markup=ForceReply())
 
 
@@ -87,7 +105,7 @@ def add_stats_command(update, context):
     # Store the command in context to check later in message processors
     context.user_data["last_command"] = "ADD"
     update.message.reply_text(
-        f'Добавить статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())})',
+        f'Добавить статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}). "/cancel" - чтобы отменить процедуру',
         reply_markup=ForceReply(selective=True))
 
 
@@ -95,7 +113,7 @@ def show_stats_command(update, context):
     # Store the command in context to check later in message processors
     context.user_data["last_command"] = "SHOW"
     update.message.reply_text(
-        f'Показать статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())})',
+        f'Показать статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}). "/cancel" - чтобы отменить процедуру',
         reply_markup=ForceReply(selective=True))
 
 
@@ -200,6 +218,7 @@ def game_cover(update, context):
 
 def cancel(update, context):
     update.message.reply_text('End dialog')
+    context.user_data.clear()  # clean context with /cancel bot-command for successly tracking all msgs to cath GIF's
     return ConversationHandler.END
 
 
