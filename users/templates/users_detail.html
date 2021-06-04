@@ -64,46 +64,34 @@
             <table class="table table-borderless">
                 <thead>
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th>Last 5 games played</th>
+                    <th>Last {{ object.username }}'s 5 games played</th>
                     <th>Summary score</th>
-                    <th>Day played</th>
-                    <th>Frequency</th>
+                    <th>RUSH DAY</th>
+                    <th>Sessions frequency</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <th scope="row">
-                        {{ object.id }}
-                    </th>
-                    <td>
-                        {{ object.username }}
-                    </td>
-                    <td>
-                        {{ object.email }}
-                    </td>
                     <td>
                         {% for game in last_five_games_played %}
-                            <a href={% url 'games:games_detail' game.pk %}>{{ game }}</a>
+                            <p>
+                                <a href="{% url 'games:games_detail' game.pk %}">{{ game }}</a>
+                            </p>
                         {% endfor %}
                     </td>
                     <td>
                         {% for game in last_five_games_played %}
-                            <div>
+                            <p>
                                 {{ game.player_score }}
-                            </div>
+                            </p>
                         {% endfor %}
                     </td>
                     <td>
-                        {% for day in sessions %}
-                            {{ day.weekday }}
-                        {% endfor %}
+                        {{ most_active_day }}
                     </td>
                     <td>
-                        {% for elem in frequency.items %}
-                            {{ elem }}
+                        {% for day, percentage in frequency.items %}
+                            {{ day }}: {{ percentage }}
                         {% endfor %}
                     </td>
                 </tr>

@@ -11,7 +11,7 @@ from django.views.generic.edit import CreateView, UpdateView, FormMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import ExtractIsoWeekDay
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
 from django.core import serializers
 from django.core.mail import send_mail
 from django.contrib import messages
@@ -28,7 +28,7 @@ from games.models import Games, GameSession, GameScores
 from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm, CustomUserRemoveFriendForm,\
     FriendshipRequestAcceptForm
 from users.db_actions import add_user_into_db_simple
-from users.utils import get_player_calendar
+from users.utils import get_player_calendar_with_week_day_number, get_player_calendar_with_week_day_name, get_the_most_played_day
 from .filter import FriendshipRequestFilter
 
 load_dotenv(find_dotenv())
@@ -111,6 +111,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         :param kwargs: captured named param from url_disptacher path()
         :return: additional context for template rendering
         """
+        current_user = self.object
         context = super().get_context_data(**kwargs)
         context['json'] = serializers.serialize(
             'json',
@@ -134,23 +135,56 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
 
         games_data = []
         for game in games:
-            sessions_data = []
             if self.request.user.pk != self.kwargs['pk']:
-                for session in game.sessions.filter(scores__user=self.get_object(), is_private=False).distinct():
-                    session_data = {
-                        "date": session.created_at,
-                        "score": GameScores.objects.filter(user=self.get_object(), game_session=session).aggregate(Sum('score')),
-                    }
-                    sessions_data.append(session_data)
+
+                sessions_data = list(
+                    game.sessions.filter(
+                        is_private=False,
+                        scores__user=current_user,
+                    ).annotate(
+                        date=F('created_at'),
+                        score=Sum('scores__score')
+                    ).values('date', 'score')
+                )
+                    #  Expensive realization with 'for' loop: each iteration = db calls
+                # for session in game.sessions.filter(scores__user=current_user, is_private=False).distinct():
+                #     session_data = {
+                #         "date": session.created_at,
+                #         "score": GameScores.objects.filter(
+                #             user=current_user,
+                #             game_session=session
+                #         ).aggregate(Sum('score'))['score__sum'],
+                #     }
+                #     sessions_data.append(session_data)
+
             else:
-                for session in game.sessions.filter(scores__user=self.get_object()).distinct():
-                    session_data = {
-                        "date": session.created_at,
-                        # "score": GameScores.objects.filter(user=self.get_object()).get(game_session=session).score,
-                        #  "предохранитель" на случай более чем одного "scores" для игровой сессии
-                        "score": GameScores.objects.filter(user=self.get_object(), game_session=session).aggregate(Sum('score')),
-                    }
-                    sessions_data.append(session_data)
+
+                sessions_data = list(
+                    game.sessions.filter(
+                        scores__user=current_user
+                    ).annotate(
+                        date=F('created_at'),
+                        score=Sum('scores__score')
+                    ).values('date', 'score')
+                )
+
+                    #  Expensive realization with 'for' loop: each iteration = db calls
+                # for session in game.sessions.filter(scores__user=current_user).distinct():
+                #     session_data = {
+                #         "date": session.created_at,
+
+                            #  Realization with access through related GameSession object
+                        # "score": session.scores.filter(
+                        #     user=current_user,
+                        # ).aggregate(Sum('score'))['score__sum'],
+
+                            #  Realization with raw access to GameScores object
+                        # "score": GameScores.objects.filter(
+                        #     user=current_user,
+                        #     game_session=session
+                        # ).aggregate(Sum('score'))['score__sum'],
+                    # }
+                    # sessions_data.append(session_data)
 
             if not sessions_data:
                 continue
@@ -177,7 +211,6 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 sessions__is_private=False
             ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
-
         context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
 
         if self.request.user.pk == self.kwargs['pk']:
@@ -189,9 +222,11 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 is_private=False
             ).annotate(weekday=ExtractIsoWeekDay("created_at"))
 
-        context['sessions'] = self_game_sessions
+        context['sessions'] = self_game_sessions #  unclaimed yet
 
-        context["frequency"] = get_player_calendar(self_game_sessions)
+        context['most_active_day'] = get_the_most_played_day(self_game_sessions)
+
+        context["frequency"] = get_player_calendar_with_week_day_name(self_game_sessions)
 
         return context
 
