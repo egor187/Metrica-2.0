@@ -56,8 +56,8 @@ class StatsBot:
         self.dispatcher.add_handler(CommandHandler("cancel", cancel))
         self.dispatcher.add_handler(conv_handler_add_game)
         self.dispatcher.add_handler(conv_handler_weekly_stats)
-        self.dispatcher.add_handler(MessageHandler(~Filters.command & reply_to_message_filter & (~Filters.animation), process_bot_reply_message))
-        self.dispatcher.add_handler(MessageHandler(Filters.animation, animation_callback))
+        self.dispatcher.add_handler(MessageHandler(~Filters.command & reply_to_message_filter & (~Filters.animation) & ~Filters.sticker, process_bot_reply_message))
+        self.dispatcher.add_handler(MessageHandler(Filters.animation | Filters.sticker, animation_callback))
 
 
     def process_update(self, request):
