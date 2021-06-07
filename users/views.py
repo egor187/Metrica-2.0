@@ -24,12 +24,13 @@ from dotenv import load_dotenv, find_dotenv
 import jwt
 
 import users.models
-from games.models import Games, GameSession, GameScores
+from games.models import Games, GameSession
 from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm, CustomUserRemoveFriendForm,\
     FriendshipRequestAcceptForm
 from users.db_actions import add_user_into_db_simple
 from users.utils import get_player_calendar_with_week_day_number, get_player_calendar_with_week_day_name, get_the_most_played_day
 from .filter import FriendshipRequestFilter
+from .utils import avatar_double_reducer
 
 load_dotenv(find_dotenv())
 site_root_url = settings.PROJECT_ROOT_URL
@@ -335,6 +336,24 @@ class UsersCreateView(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'user_register.html'
 
+    def get_success_url(self):
+        """
+        Override parent method for 'autologin' purpose
+        """
+        login(self.request, user=self.object)
+        return super().get_success_url()
+
+    def form_valid(self, form):
+        """
+        Override parent method for reduce in a half size of avatar sent by users
+        """
+        new_user_bounded_form = form.save(commit=False)
+        user_avatar = self.request.FILES['avatar']
+        new_user_bounded_form.avatar = avatar_double_reducer(user_avatar)
+        new_user_bounded_form.save()
+
+        return super().form_valid(form)
+
 
 class UsersUpdateView(LoginRequiredMixin, UpdateView):
     model = users.models.CustomUser
@@ -540,19 +559,15 @@ def invite_to_register(request):
 
 
 @csrf_exempt  # disable csrf protection for testing via Postman by using decorator
-def add_user_view(request):
+def add_user_view_through_tg_bot(request):
     if request.method == 'POST':
         request_raw = request.body
         request_json = json.loads(request_raw)
         user = request_json['user']
         new_user_pk = add_user_into_db_simple(user)
 
-    if request.method == 'GET':
-        user = request.GET.get('user')
-        new_user_pk = add_user_into_db_simple(user)
-
     return HttpResponse(
-        f"{site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
+        f"Ссылка на Ваш аккаунт: {site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
     ) if new_user_pk else HttpResponse(
         f"Вы уже зарегистрированы. Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
     )
@@ -565,7 +580,14 @@ class UserUpdateViewFromBot(UpdateView):
     model = users.models.CustomUser
     form_class = CustomUserCreationForm
     template_name = 'user_update_from_bot.html'
-    success_url = reverse_lazy('index')
+
+    def get_success_url(self):
+        """
+        Override classmethod to achieve redirect to profile page in built-in auth CBV
+        """
+        login(self.request, user=self.object)  # login "just updated from bot" user
+        url = reverse_lazy('users:users_detail', args=[self.kwargs.get('pk'), ])
+        return url
 
 
 def feedback_view(request):

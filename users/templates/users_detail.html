@@ -87,7 +87,9 @@
                         {% endfor %}
                     </td>
                     <td>
-                        {{ most_active_day }}
+                        {% if most_active_day %}
+                            {{ most_active_day }}
+                        {% endif %}
                     </td>
                     <td>
                         {% for day, percentage in frequency.items %}

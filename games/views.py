@@ -13,6 +13,7 @@ from django.db.models import Sum, Count
 
 from games.models import Games, GameScores, GameSession
 from games.forms import GameCreationForm
+from games.utils import game_cover_double_reducer
 from users.models import CustomUser
 
 from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot
@@ -170,6 +171,7 @@ class GamesAddView(CreateView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GamesAddBotView(View):
+
     def post(self, request):
         game_name = request.POST["game_name"]
         try:
@@ -178,7 +180,9 @@ class GamesAddBotView(View):
             logger.info(f"Error signature: {e}. No image for cover provided. Apply default cover for case 'new game'")
             result = add_game_into_db_single_from_bot(game_name)
         else:
-            result = add_game_into_db_single_from_bot(game_name, avatar)
+            reduced_avatar = game_cover_double_reducer(avatar)
+            result = add_game_into_db_single_from_bot(game_name, reduced_avatar)
+        print(f"!!!!!!FILE AVATAR!!!{avatar}")
         return HttpResponse(result)
 
 

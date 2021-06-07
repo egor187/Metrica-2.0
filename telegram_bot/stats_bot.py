@@ -237,7 +237,7 @@ conv_handler_add_game = ConversationHandler(
     entry_points=[CommandHandler('add_game', add_game_start)],
     states={
         GAME_NAME: [MessageHandler(Filters.text & ~Filters.command, game_name)],
-        GAME_COVER: [MessageHandler(Filters.photo & Filters.text, game_cover)]
+        GAME_COVER: [MessageHandler(Filters.photo | Filters.text, game_cover)]
     },
     fallbacks=[
         CommandHandler('cancel', cancel),
