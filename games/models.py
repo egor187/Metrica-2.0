@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import validate_image_file_extension
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from users.models import CustomUser
 
 

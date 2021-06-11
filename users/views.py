@@ -28,7 +28,8 @@ from games.models import Games, GameSession
 from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm, CustomUserRemoveFriendForm,\
     FriendshipRequestAcceptForm
 from users.db_actions import add_user_into_db_simple
-from users.utils import get_player_calendar_with_week_day_number, get_player_calendar_with_week_day_name, get_the_most_played_day
+from users.utils import get_player_calendar_with_week_day_number, get_player_calendar_with_week_day_name, \
+    get_the_most_played_day
 from .filter import FriendshipRequestFilter
 from .utils import avatar_double_reducer
 
@@ -42,7 +43,7 @@ class UsersLoginView(LoginView):
 
     def get_success_url(self):
         """
-        Override classmethod to achieve redirect to profile page in buil-in auth CBV
+        Override classmethod to achieve redirect to profile page in built-in auth CBV
         :return:
         """
         url = reverse_lazy('users:users_detail', args=[self.request.user.id, ])
@@ -99,7 +100,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         self.friends_pk_list = list(self.request.user.friendship.values_list('pk', flat=True))
         if self.get_object().pk != request.user.pk\
                 and self.get_object().pk not in self.friends_pk_list\
-                and not request.user.is_staff:  # more "django_style" method to call .get_object() for get instance of a model
+                and not request.user.is_staff:  # "django_style" method to call .get_object() for get model instance
             messages.error(request, self.perm_denied_msg)
             return HttpResponseRedirect(reverse_lazy('users:users_index'))
         return super().get(self, request, *args, **kwargs)
@@ -109,7 +110,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         OPTIONAL
         Override parent method to get context data for template (add JSON -
         format data about current user)
-        :param kwargs: captured named param from url_disptacher path()
+        :param kwargs: captured named param from url_dispatcher path()
         :return: additional context for template rendering
         """
         current_user = self.object
@@ -147,7 +148,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                         score=Sum('scores__score')
                     ).values('date', 'score')
                 )
-                    #  Expensive realization with 'for' loop: each iteration = db calls
+                #  Expensive realization with 'for' loop: each iteration = db calls
                 # for session in game.sessions.filter(scores__user=current_user, is_private=False).distinct():
                 #     session_data = {
                 #         "date": session.created_at,
@@ -159,7 +160,6 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 #     sessions_data.append(session_data)
 
             else:
-
                 sessions_data = list(
                     game.sessions.filter(
                         scores__user=current_user
@@ -169,17 +169,17 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                     ).values('date', 'score')
                 )
 
-                    #  Expensive realization with 'for' loop: each iteration = db calls
+                #  Expensive realization with 'for' loop: each iteration = db calls
                 # for session in game.sessions.filter(scores__user=current_user).distinct():
                 #     session_data = {
                 #         "date": session.created_at,
 
-                            #  Realization with access through related GameSession object
+                        #  Realization with access through related GameSession object
                         # "score": session.scores.filter(
                         #     user=current_user,
                         # ).aggregate(Sum('score'))['score__sum'],
 
-                            #  Realization with raw access to GameScores object
+                        #  Realization with raw access to GameScores object
                         # "score": GameScores.objects.filter(
                         #     user=current_user,
                         #     game_session=session
@@ -212,7 +212,9 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 sessions__is_private=False
             ).distinct().annotate(player_score=Sum("sessions__scores__score"))
 
-        context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(scores__user__id=self.kwargs["pk"])
+        context["self_sessions"] = GameSession.objects.prefetch_related('scores').filter(
+            scores__user__id=self.kwargs["pk"]
+        )
 
         if self.request.user.pk == self.kwargs['pk']:
             self_game_sessions = GameSession.objects.filter(scores__user__pk=self.kwargs["pk"]).\
@@ -223,7 +225,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
                 is_private=False
             ).annotate(weekday=ExtractIsoWeekDay("created_at"))
 
-        context['sessions'] = self_game_sessions #  unclaimed yet
+        context['sessions'] = self_game_sessions  # unclaimed yet
 
         context['most_active_day'] = get_the_most_played_day(self_game_sessions)
 
@@ -257,7 +259,6 @@ class FriendRequestListView(LoginRequiredMixin, FormMixin, ListView):
         Override parent method to achieve possibility for two kinds fo requests rendering in templates
         """
         context = super().get_context_data()
-        # context['outcome_friendship_requests'] = users.models.FriendshipRequest.objects.filter(from_user=self.request.user)
         context['filter_income'] = FriendshipRequestFilter(
             self.request.GET,
             queryset=users.models.FriendshipRequest.objects.filter(to_user=self.request.user)
@@ -278,12 +279,12 @@ class FriendRequestProceedView(LoginRequiredMixin, UpdateView):
     context_object_name = 'friendship_request'
 
     perm_denied_msg = 'Permission denied. Only owner can manage friends'
-    friendship_accept_succeed_msg  = "You accept '{friend}'s friendship request. " \
-                              "'{friend}' now can view your profile page."
+    friendship_accept_succeed_msg = "You accept '{friend}'s friendship request." \
+                                    "'{friend}' now can view your profile page."
     friendship_decline_succeed_msg = "You decline '{friend}'s friendship request. " \
-                                 "At now your access to '{friend}'s profile page is closed."
-    friendship_withdraw_succeed_msg = "You've withdraw your friendship request to '{friend}'. " \
-                                     "At now '{friend}' don't have access to your profile page."
+                                     "At now your access to '{friend}'s profile page is closed."
+    friendship_withdraw_succeed_msg = "You've withdraw your friendship request to '{friend}'." \
+                                      "At now '{friend}' don't have access to your profile page."
 
     def post(self, request, *args, **kwargs):
         """
@@ -347,10 +348,11 @@ class UsersCreateView(CreateView):
         """
         Override parent method for reduce in a half size of avatar sent by users
         """
-        new_user_bounded_form = form.save(commit=False)
-        user_avatar = self.request.FILES['avatar']
-        new_user_bounded_form.avatar = avatar_double_reducer(user_avatar)
-        new_user_bounded_form.save()
+        if self.request.FILES.get('avatar'):
+            new_user_bounded_form = form.save(commit=False)
+            user_avatar = self.request.FILES['avatar']
+            new_user_bounded_form.avatar = avatar_double_reducer(user_avatar)
+            new_user_bounded_form.save()
 
         return super().form_valid(form)
 
@@ -369,13 +371,14 @@ class UsersUpdateView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-# Realization with vanila View through adding friend to CustomUser instance
+# Realization with vanilla View through adding friend to CustomUser instance
 # class FriendAddView(View):
 #     form_class = CustomUserAddFriendForm
 #     template_name = 'friend_add.html'
 #     success_url = reverse_lazy('users:users_index')
 #     perm_denied_msg = 'Permission denied. Only owner can manage friends'
-#     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. '{friend}' now can view your profile page"
+#     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends." \
+#                               " '{friend}' now can view your profile page"
 #     friendship_exist_msg  = "You're already in '{friend}' friend_list."
 #
 #     def post(self, *args, **kwargs):
@@ -418,7 +421,8 @@ class UsersUpdateView(LoginRequiredMixin, UpdateView):
 #     success_url = reverse_lazy('users:users_index')
 #
 #     perm_denied_msg = 'Permission denied. Only owner can manage friends'
-#     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. '{friend}' now can view your profile page"
+#     friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends.
+#     '{friend}' now can view your profile page"
 #     friendship_exist_msg  = "You're already in '{friend}' friend_list."
 #
 #     def post(self, request, *args, **kwargs):
@@ -461,11 +465,20 @@ class FriendAddView(CreateView):
     success_url = reverse_lazy('users:users_index')
 
     perm_denied_msg = 'Permission denied. Only owner can manage friends'
-    friendship_succeed_msg  = "You've been succesfully added to '{friend}' friends. " \
+    friendship_succeed_msg  = "You've been successfully added to '{friend}' friends. " \
                               "'{friend}' now can view your profile page. Friendship request to '{friend}' was sent. " \
                               "If '{friend}' will accept it - you'll be able to get access to his profile"
     friendship_exist_msg  = "You're already in '{friend}' friend_list."
     error_msg = "You can't be a friend with yourself"
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Protection against unauthorized access to the friendship management page
+        """
+        if self.kwargs['pk'] != request.user.pk:
+            messages.error(request, self.perm_denied_msg)
+            return HttpResponseRedirect(reverse_lazy('users:users_index'))
+        return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         """
@@ -501,7 +514,7 @@ class FriendAddView(CreateView):
 
     def get(self, request, *args, **kwargs):
         """
-
+        Override to exclude 'self_request_user' from 'friendship' relation
         """
         form = CustomUserAddFriendForm()
         form.fields['friends_candidates'].queryset = form.fields['friends_candidates'].queryset.exclude(
@@ -517,7 +530,7 @@ class FriendRemoveView(FriendAddView):
     template_name = 'friend_remove.html'
     form_class = CustomUserRemoveFriendForm
 
-    friendship_succeed_msg = "You've been succesfully removed from '{friend}' friends. " \
+    friendship_succeed_msg = "You've been successfully removed from '{friend}' friends. " \
                              "'{friend}' now can't view your profile page"
 
     def post(self, request, *args, **kwargs):
@@ -569,7 +582,8 @@ def add_user_view_through_tg_bot(request):
     return HttpResponse(
         f"Ссылка на Ваш аккаунт: {site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
     ) if new_user_pk else HttpResponse(
-        f"Вы уже зарегистрированы. Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
+        f"Вы уже зарегистрированы. "
+        f"Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
     )
 
 
@@ -599,8 +613,12 @@ def feedback_view(request):
     if request.method == "POST":
         form = FeedbackForm(request.POST)
         if form.is_valid():
-            send_mail(form.cleaned_data['subject'], form.cleaned_data['content'], from_email=None,
-                      recipient_list=[os.getenv('DEFAULT_FROM_EMAIL'), ])
+            send_mail(
+                form.cleaned_data['subject'],
+                form.cleaned_data['content'],
+                from_email=None,
+                recipient_list=[os.getenv('DEFAULT_FROM_EMAIL'), ]
+            )
             messages.info(request, 'Письмо отправлено')
             HttpResponseRedirect(reverse_lazy('users:users_index'))
         else:

@@ -29,7 +29,7 @@ def get_game_id_by_name(name):
     """
     try:
         game_id = Games.objects.get(name=name).pk
-    except Exception:
+    except Games.DoesNotExist:
         return False
     return game_id
 
@@ -51,7 +51,7 @@ def get_game_object_by_id(game_id):
     """
     try:
         game = Games.objects.get(id=game_id)
-    except Exception:
+    except Games.DoesNotExist:
         return False
     return game
 
@@ -63,6 +63,67 @@ def get_game_object_by_name(game_name):
     return game_object
 
 
+def get_user_list_for_current_game(user_list, current_user_pk, game_pk):
+    """
+    :param user_list:
+    :param current_user_pk: CustomUser instance from Django sessions middleware (request.user)
+    :param game_pk: Games instance from GameDetail CBV
+    :return: list of users which played specific game with info about game sessions depending on ownership of that info
+    """
+    user_list_for_current_game = []
+    for user in user_list:
+        sessions = []
+        for score in user.scores.filter(game_session__game__pk=game_pk):
+            if current_user_pk != user.pk:
+                if score.game_session.is_private:
+                    user.played_public_games_count -= 1
+                else:
+                    sessions.append(score.game_session)
+            else:
+                sessions.append(score.game_session)
+
+        if sessions:
+            user_list_for_current_game.append(user)
+    return user_list_for_current_game
+
+
+def get_users_with_scores(current_user_pk, users_list, game_pk):
+    """
+    :param current_user_pk:
+    :param users_list:
+    :param game_pk:
+    :return: user_list with dicts with calculated score and private_score (for private sessions) for each user.
+    """
+    result = []
+    for user in users_list:
+        if current_user_pk == user.pk:
+            result.append(dict(
+                name=user.username,
+                score=GameScores.objects.filter(
+                    game_session__game__pk=game_pk,
+                ).filter(
+                    user=user
+                ).aggregate(Sum('score'))['score__sum'],
+                private_score=GameScores.objects.filter(
+                    game_session__game__pk=game_pk,
+                    game_session__is_private=True,
+                ).filter(
+                    user=user
+                ).aggregate(Sum('score'))['score__sum']
+            )
+            )
+        else:
+            result.append(dict(
+                name=user.username,
+                score=GameScores.objects.filter(
+                    game_session__game__pk=game_pk,
+                    game_session__is_private=False,
+                ).filter(
+                    user=user
+                ).aggregate(Sum('score'))['score__sum']))
+    return result
+
+
 def add_game_into_db_single_from_bot(name, cover=None):
     """
     Insert new game into db
@@ -70,13 +131,14 @@ def add_game_into_db_single_from_bot(name, cover=None):
     :param name: str()-name of the game
     :return: model object of new added game
     """
-    dirs_by_date = datetime.now().strftime('\\%Y\\%m\\%d\\')
+
+    dirs_by_date = datetime.now().strftime('/%Y/%m/%d/')
     file_name = f"{uuid.uuid4()}.jpg"
-    full_path = f"{settings.MEDIA_UPLOADS_ROOT}\\games_cover{dirs_by_date}"
+    full_path = f"{settings.MEDIA_UPLOADS_ROOT}/games_cover{dirs_by_date}"
     file_fp = f"{full_path}{file_name}"
 
-    cover_path_for_field = f"\\uploads\\games_cover{dirs_by_date}{file_name}"
-    default_cover_path_for_field = f"\\uploads\\games_cover{dirs_by_date}default_cover.jpg"
+    cover_path_for_field = f"/uploads/games_cover{dirs_by_date}{file_name}"
+    default_cover_path_for_field = f"/uploads/games_cover{dirs_by_date}default_cover.jpg"
     default_cover_download_source = os.getenv('DEFAULT_GAME_COVER_SOURCE')
 
     os.makedirs(full_path, exist_ok=True)
@@ -96,8 +158,8 @@ def add_game_into_db_single_from_bot(name, cover=None):
                 return game
 
         elif imghdr.what('', file_bytes) is None:
-            logger.info("NON-image file cannot be processed. "
-                "In case with new game - it will be saved without cover_art")
+            logger.info("NON-image file cannot be processed."
+                        "In case with new game - it will be saved without cover_art")
 
             game = Games.objects.create(name=name, cover_art=default_cover_path_for_field)
             return game
@@ -170,7 +232,7 @@ def stats_repr(game):
     return result_msg_dict
 
 
-def add_giffer_scores(user_name, score):
+def add_tg_animation_scores(user_name, score):
     game_name = 'botyara'
     game = Games.objects.get_or_create(name=game_name)[0]
     game_session_object = add_game_session_into_db(game)

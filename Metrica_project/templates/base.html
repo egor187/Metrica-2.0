@@ -12,7 +12,7 @@
     {% bootstrap_css %}
     {% bootstrap_javascript jquery='full' %}
 
-    <link href="{% static "css/custom.css" %}" rel="stylesheet">
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.2.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@1.1.0-alpha/dist/chartjs-adapter-date-fns.bundle.js"></script>
@@ -28,7 +28,9 @@
     {% block header %}
         <div class="row align-items-center my-5">
             <div class="col">
-                <h1><a href={% url "index" %}>Metrica</a></h1>
+                <h1>
+                    <a href="{% url 'index' %}">Metrica</a>
+                </h1>
             </div>
             <div class="col-auto">
                 {% if user.is_authenticated %}
@@ -37,7 +39,7 @@
                 {% else %}
                     <a href="{% url 'users:login' %}">Login</a>
                 {% endif %}
-                | <a href={% url 'users:feedback' %}>Contact</a>
+                | <a href="{% url 'users:feedback' %}">Contact</a>
             </div>
         </div>
     {% endblock %}

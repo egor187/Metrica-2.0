@@ -34,15 +34,6 @@
                 {% for player in users_list %}
                     <tr>
                         <th scope="row">{{ player.id }}</th>
-{% comment %}
-                        <td>
-                            {% if user.pk == player.pk or user.is_staff %}
-                                <a href="{{ player.get_absolute_url }}">{{ player.username }}</a>
-                            {% else %}
-                                {{ player.username }}
-                            {% endif %}
-                        </td>
-{% endcomment %}
                         <td>
                             <a href="{{ player.get_absolute_url }}">{{ player.username }}</a>
                         </td>

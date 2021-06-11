@@ -8,7 +8,6 @@ class GamesTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.game = Games.objects.create(name='Test game')
-        # self.response = Client().get(reverse_lazy('games:games_index'))
 
     def test_index_view(self):
         response = self.client.get(reverse_lazy('games:games_index'))

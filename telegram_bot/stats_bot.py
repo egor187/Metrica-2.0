@@ -12,7 +12,7 @@ from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, Co
 from dotenv import load_dotenv, find_dotenv
 
 from Metrica_project.income_msg_parser import parse_message
-from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name, add_giffer_scores
+from games.db_actions import stats_repr, add_scores, get_game_names_list, get_game_id_by_name, add_tg_animation_scores
 from .db_actions import top_3_week_players_repr_public_sessions
 from telegram_bot.models import Chat
 
@@ -23,7 +23,7 @@ logger = logging.getLogger('Metrica_logger')
 
 site_root_url = settings.PROJECT_ROOT_URL
 
-# like f'string, but evaulate "lazy objects"
+# like fstring, but evaluate "lazy objects"
 USER_REGISTRATION_URL = format_lazy("{}{}", site_root_url, reverse_lazy('users:add_user_from_bot'))
 ADD_GAME_URL = format_lazy("{}{}", site_root_url, reverse_lazy('games:add_game_from_bot'))
 GAME_CHECK_URL = format_lazy("{}{}", site_root_url, reverse_lazy('games:game_check'))
@@ -56,9 +56,16 @@ class StatsBot:
         self.dispatcher.add_handler(CommandHandler("cancel", cancel))
         self.dispatcher.add_handler(conv_handler_add_game)
         self.dispatcher.add_handler(conv_handler_weekly_stats)
-        self.dispatcher.add_handler(MessageHandler(~Filters.command & reply_to_message_filter & (~Filters.animation) & ~Filters.sticker, process_bot_reply_message))
+        self.dispatcher.add_handler(
+            MessageHandler(
+                ~Filters.command &
+                reply_to_message_filter &
+                (~Filters.animation) &
+                ~Filters.sticker,
+                process_bot_reply_message
+            )
+        )
         self.dispatcher.add_handler(MessageHandler(Filters.animation | Filters.sticker, animation_callback))
-
 
     def process_update(self, request):
         update = Update.de_json(request, self.bot)
@@ -73,7 +80,7 @@ def animation_callback(update, context):
     user_name = update.message.from_user.username
     score = 1
     update.message.reply_text(f"Статы (+1) ботяры '{user_name}' занесены в Метрику")
-    add_giffer_scores(user_name, score)
+    add_tg_animation_scores(user_name, score)
 
 
 def add_game_command(update, context):
@@ -108,7 +115,8 @@ def add_stats_command(update, context):
     # Store the command in context to check later in message processors
     context.user_data["last_command"] = "ADD"
     update.message.reply_text(
-        f'Добавить статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}). "/cancel" - чтобы отменить процедуру',
+        f'Добавить статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}).'
+        f' "/cancel" - чтобы отменить процедуру',
         reply_markup=ForceReply(selective=True))
 
 
@@ -116,7 +124,8 @@ def show_stats_command(update, context):
     # Store the command in context to check later in message processors
     context.user_data["last_command"] = "SHOW"
     update.message.reply_text(
-        f'Показать статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}). "/cancel" - чтобы отменить процедуру',
+        f'Показать статы для активности (уже зарегистрированные: {", ".join(get_game_names_list())}).'
+        f' "/cancel" - чтобы отменить процедуру',
         reply_markup=ForceReply(selective=True))
 
 
@@ -221,7 +230,7 @@ def game_cover(update, context):
 
 def cancel(update, context):
     update.message.reply_text('End dialog')
-    context.user_data.clear()  # clean context with /cancel bot-command for successly tracking all msgs to cath GIF's
+    context.user_data.clear()  # clean context with /cancel bot-command for success tracking all msgs to catch GIFs
     return ConversationHandler.END
 
 
@@ -299,6 +308,7 @@ def set_weekly_top_players_stats_schedule(update, context):
     # a model field
     chat = Chat.objects.get(chat_id=chat_id)
     chat.is_stats_deliver_ordered = True
+    chat.save()
 
 
 def unset_weekly_top_players_stats_schedule(update, context):

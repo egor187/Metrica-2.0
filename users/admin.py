@@ -10,7 +10,9 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserUpdateForm
     model = CustomUser
-    list_display = ('username', 'email', 'is_staff', 'is_active', 'first_name', 'last_name', 'avatar', 'friendship_repr')
+    list_display = (
+        'username', 'email', 'is_staff', 'is_active', 'first_name', 'last_name', 'avatar', 'friendship_repr'
+    )
     list_filter = ('username', 'is_staff', 'is_active',)
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields': ('avatar',)}),

@@ -12,9 +12,10 @@ ALL_USERS_USERNAMES_LIST = CustomUser.objects.all().values_list('username', flat
 ALL_GAMES = Games.objects.all()
 ALL_GAMES_NAME_LIST = Games.objects.all().values_list('name', flat=True)
 
+
 def show_stats_message(game: str):
     """
-    Return text message with current statistics for player by choosen metrica
+    Return text message with current statistics for player by chosen metrica
     """
     if get_game_id_by_name(game):
         score_pairs = stats_repr(game)
@@ -99,20 +100,32 @@ def get_weekly_metrica_for_users(username_list: list, weeks_before=0):
     for username in username_list:
         if get_user_id_by_name(username):
             if week_before:
-                result[username] = list({'game': session.game.name, 'summary_score': session.summary_score} for session in
-                                        GameSession.objects.filter(
-                                            created_at__gte=now - week_before,
-                                            is_private=False
-                                        ).filter(
-                                            scores__user__username=username).annotate(
-                                            summary_score=Sum('scores__score')))
+                result[username] = list(
+                    {
+                        'game': session.game.name,
+                        'summary_score': session.summary_score
+                    } for session in GameSession.objects.filter(
+                        created_at__gte=now - week_before,
+                        is_private=False
+                    ).filter(
+                        scores__user__username=username
+                    ).annotate(summary_score=Sum('scores__score'))
+                )
+
             else:
-                result[username] = list({'game': session.game.name, 'summary_score': session.summary_score} for session in
-                                        GameSession.objects.filter(
-                                            scores__user__username=username).annotate(summary_score=Sum('scores__score')))
+                result[username] = list(
+                    {
+                        'game': session.game.name,
+                        'summary_score': session.summary_score
+                    } for session in GameSession.objects.filter(
+                        scores__user__username=username
+                    ).annotate(summary_score=Sum('scores__score'))
+                )
+
         else:
             print('No such registered user in Metrica 2.0')
             continue
+
     return result
 
 
@@ -141,7 +154,7 @@ def humanable_stats_represent(username_list=ALL_USERS_USERNAMES_LIST, weeks_befo
             result_msg += f"Игрок '{name}' за все время {stats_string} \n"
         stats_string = ''
 
-    return result_msg[:4090] + "..." #  tg proccess only 4096 characters in sendMessage api
+    return result_msg[:4090] + "..."  # tg process only 4096 characters in sendMessage api
 
 
 def top_3_week_players(game_name: str, period_in_weeks: int):
@@ -162,7 +175,7 @@ def top_3_week_players_repr_public_sessions(game_name: str, period_in_weeks):
     now = datetime.datetime.now()
     try:
         before = datetime.timedelta(weeks=int(period_in_weeks))
-    except Exception:
+    except ValueError:
         return 'Incorrect period format: must be an integer. Try again.'
     period = now - before
 
@@ -177,7 +190,8 @@ def top_3_week_players_repr_public_sessions(game_name: str, period_in_weeks):
         msg = ''
         for elem in top_players_list:
             msg += f"'{str(elem[0])}' with score {str(elem[1])}, \n"
-        str_repr = f"Top 3 players for public game sessions for game '{game_name}' by period in {period_in_weeks} week(s) before is: {msg}"
+        str_repr = f"Top 3 players for public game sessions for game '{game_name}' by period in {period_in_weeks} " \
+                   f"week(s) before is: {msg}"
         return str_repr
     return "No such game registered in Metrica"
 

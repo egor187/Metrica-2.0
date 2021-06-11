@@ -13,6 +13,9 @@ class CustomUser(AbstractUser):
 
     @admin.display
     def friendship_repr(self):
+        """
+        Represent list of users friends on change_page of an admin panel
+        """
         return list(self.friendship.values_list('username', flat=True))
 
     class Meta:
@@ -111,10 +114,7 @@ class Claim(models.Model):
     def save(self, *args, **kwargs):
         """
         Override super() method to get opportunity to use F() expression in model field creation (deltatime)
-        for "answer_date_expiration" field
-        :param args:
-        :param kwargs:
-        :return:
+        for "answer_date_expiration" field (+14 days for answer)
         """
         # NOT covered in tests
         super().save(*args, **kwargs)

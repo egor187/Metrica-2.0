@@ -15,5 +15,4 @@ stats_bot_token = os.getenv("STATS_BOT_TOKEN_TEST")
 
 urlpatterns = [
     path('stats_proceed/' + stats_bot_token, views.stats_proceed_view, name='stats_proceed_from_bot'),
-
 ]

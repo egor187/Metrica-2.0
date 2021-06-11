@@ -3,7 +3,6 @@ import django
 
 from django.core.mail import send_mail
 
-
 # add <path_to_script> to system path for correct modules import.
 # sys.path.append('C:\\Users\home_\PycharmProjects\Metrica_project')
 
@@ -15,8 +14,11 @@ from games.models import GameSession, GameScores
 
 
 def email_send():
-    subject = 'Псс, паря, чо с игрой-то, а?'
-    message = 'А ну-ка подтяни свою игру. За последние 5 игровых сейсий ты набрал меньше всего очков. TEST 19.03'
+    """
+    Send email to users which score in last 5 in-game sessions was the fewest
+    """
+    subject = "Looser detected!?"
+    message = "Tight up your game. You have scored the fewest points in last 5 in-game sessions."
     recipients_email = []
 
     last_five_sessions = GameSession.objects.all()[:5]

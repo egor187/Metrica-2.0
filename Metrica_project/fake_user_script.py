@@ -6,8 +6,6 @@ import requests
 import django
 from PIL import Image
 
-from fake.generator import generate_game
-
 os.environ['DJANGO_SETTINGS_MODULE'] = 'Metrica_project.settings'  # set Django-needed settings module
 django.setup()
 

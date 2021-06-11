@@ -6,7 +6,6 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         from .signals import friendship_post_save_signal_receiver
-        from .signals import email_for_friendship_request_proccess
         from django.db.models.signals import post_save
         from .models import FriendshipRequest
 
@@ -16,11 +15,10 @@ class UsersConfig(AppConfig):
             dispatch_uid='my_unique_identifier'
         )
 
-        #  on "dev" turned off because Mailgun account need to upgrade to set custom mail domain and send mails
+        #  on "prod" turned off because Mailgun account need to upgrade to set custom mail domain and send mails
         #  unlimited number of recipients, not just authorized recipients.
-
         # post_save.connect(
-        #     email_for_friendship_request_proccess,
+        #     email_for_friendship_request_process,
         #     sender=FriendshipRequest,
         #     dispatch_uid='my_unique_identifier2'
         # )

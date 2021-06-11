@@ -59,6 +59,7 @@ class FeedbackForm(forms.ModelForm):
 #         }
 #         widgets = {'friendship': django.forms.CheckboxSelectMultiple()}
 
+
 class CustomUserAddFriendForm(forms.Form):
     """
     Refusal from ModelForm because in form need to reference to all CustomUsers (further filtered in view)
@@ -86,7 +87,7 @@ class FriendshipRequestAcceptForm(forms.ModelForm):
     class Meta:
         """'id' field of a models (type: AutoField) hasn't representation in forms.
         No corresponding field type of a form. That's why it's was chosen to get form with only
-        'button' to send form with populated choice in code
+        'button' to send form with populated in code choice
         """
         model = FriendshipRequest
         fields = [
