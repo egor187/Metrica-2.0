@@ -105,6 +105,15 @@ class GamesAddView(CreateView):
     form_class = GameCreationForm
     template_name = 'add_game.html'
 
+    def post(self, request, *args, **kwargs):
+        """
+        Reduce incoming users game_cover images
+        """
+        game_cover = request.FILES["cover_art"]
+        request.FILES["cover_art"] = game_cover_double_reducer(game_cover)
+
+        return super().post(request, args, kwargs)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GamesAddBotView(View):
