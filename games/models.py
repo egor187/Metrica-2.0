@@ -9,7 +9,8 @@ class Games(models.Model):
     cover_art = models.ImageField(
         upload_to='uploads/games_cover/%Y/%m/%d/',
         max_length=120,
-        validators=[validate_image_file_extension]
+        validators=[validate_image_file_extension],
+        blank=True,
     )
 
     def __str__(self):

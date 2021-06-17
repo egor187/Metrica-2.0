@@ -1,19 +1,22 @@
 import logging
+import os
+import uuid
+from datetime import datetime
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
 from django.utils.decorators import method_decorator
-from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Count
 
+from Metrica_project.storage_backends import MediaStorage
 from games.models import Games, GameScores, GameSession
 from games.forms import GameCreationForm
 from games.utils import game_cover_double_reducer
 from users.models import CustomUser
 
-from games.db_actions import get_game_id_by_name, add_game_into_db_single_from_bot, get_user_list_for_current_game, \
+from games.db_actions import get_game_id_by_name, get_user_list_for_current_game, \
     get_users_with_scores
 from games.filter import GameFilter
 
@@ -109,8 +112,9 @@ class GamesAddView(CreateView):
         """
         Reduce incoming users game_cover images
         """
-        game_cover = request.FILES["cover_art"]
-        request.FILES["cover_art"] = game_cover_double_reducer(game_cover)
+        if request.FILES.get("cover_art"):
+            game_cover = request.FILES["cover_art"]
+            request.FILES["cover_art"] = game_cover_double_reducer(game_cover)
 
         return super().post(request, args, kwargs)
 
@@ -120,16 +124,26 @@ class GamesAddBotView(View):
 
     def post(self, request):
         game_name = request.POST["game_name"]
-        try:
-            avatar = request.FILES["avatar"]
-        except MultiValueDictKeyError as e:
-            logger.info(f"Error signature: {e}. No image for cover provided. Apply default cover for case 'new game'")
-            result = add_game_into_db_single_from_bot(game_name)
-        else:
-            reduced_avatar = game_cover_double_reducer(avatar)
-            result = add_game_into_db_single_from_bot(game_name, reduced_avatar)
 
-        return HttpResponse(result)
+        if request.FILES.get("avatar"):
+            game_cover_file = game_cover_double_reducer(request.FILES["avatar"])
+            dirs_by_date = datetime.now().strftime('/%Y/%m/%d/')
+            file_directory_within_bucket = f"uploads/games_cover/{dirs_by_date}"
+            game_cover_file.name = f"{uuid.uuid4()}.jpg"
+            file_path_within_bucket = os.path.join(
+                file_directory_within_bucket,
+                game_cover_file.name
+            )
+
+            media_storage = MediaStorage()  # settings_prod case
+            media_storage.save(file_path_within_bucket, game_cover_file)
+
+            Games.objects.create(name=game_name, cover_art=file_path_within_bucket)
+
+        else:
+            Games.objects.create(name=game_name)
+
+        return HttpResponse()
 
 
 @method_decorator(csrf_exempt, name="dispatch")
