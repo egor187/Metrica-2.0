@@ -221,9 +221,12 @@ def game_name(update, context):
 
 def game_cover(update, context):
     game_name = context.user_data["game_name"]
-    photo = update.message.photo[-1].get_file()
     update.message.reply_text(f"Processing the cover for the '{game_name}'...")
-    requests.post(ADD_GAME_URL, data={'game_name': game_name}, files={'avatar': photo.download_as_bytearray()})
+    try:
+        photo = update.message.photo[-1].get_file()
+        requests.post(ADD_GAME_URL, data={'game_name': game_name}, files={'avatar': photo.download_as_bytearray()})
+    except IndexError:
+        requests.post(ADD_GAME_URL, data={'game_name': game_name})
     update.message.reply_text(f'New game "{game_name}" added to Metrica!')
     return ConversationHandler.END
 
