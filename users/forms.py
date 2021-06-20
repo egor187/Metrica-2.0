@@ -8,7 +8,7 @@ from django_summernote.widgets import SummernoteWidget
 
 
 class CustomUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm):
+    class Meta:
         model = CustomUser
         fields = [
             'username',

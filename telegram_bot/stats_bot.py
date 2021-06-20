@@ -50,7 +50,7 @@ class StatsBot:
         self.dispatcher = Dispatcher(self.bot, None, workers=0)
         self.dispatcher.add_handler(CommandHandler("add_stats", add_stats_command))
         self.dispatcher.add_handler(CommandHandler("show_current_stats", show_stats_command))
-        self.dispatcher.add_handler(CommandHandler("register_user", register_user_command))
+        self.dispatcher.add_handler(CommandHandler("register_user", process_register_user_command))
         self.dispatcher.add_handler(CommandHandler("set_stats_scheduler", set_weekly_top_players_stats_schedule))
         self.dispatcher.add_handler(CommandHandler("unset_stats_scheduler", unset_weekly_top_players_stats_schedule))
         self.dispatcher.add_handler(CommandHandler("cancel", cancel))
@@ -97,16 +97,21 @@ def process_add_game_command(update, context):
     update.message.reply_text(response.text)
 
 
-def register_user_command(update, context):
+def process_register_user_command(update, context):
     # Store the command in context to check later in message processors
+    user = update.message.from_user.username
     context.user_data["last_command"] = "REGISTER"
     update.message.reply_text(
-        f'Зарегистрировать юзера. "/cancel" - чтобы отменить процедуру',
+        f'Send any text in response to this message to register you with tg account name "{user}". '
+        f'Or send command "/cancel" - to cancel process',
         reply_markup=ForceReply())
 
 
-def register_command(update, context):
-    user = update.message.text
+def register_user_command(update, context):
+    """
+    Register user in Metrica db with actual tg account name
+    """
+    user = update.message.from_user.username
     response = requests.post(USER_REGISTRATION_URL, json={"user": str(user)})
     update.message.reply_text(response.text)
 
@@ -160,7 +165,7 @@ def process_bot_reply_message(update, context):
             else:
                 process_unknown_message(update, context)
         elif last_command == 'REGISTER':
-            register_command(update, context)
+            register_user_command(update, context)
     except KeyError:
         update.message.reply_text('Unrecognized command/message')
 
@@ -193,7 +198,7 @@ def process_add_stats_message(update, context):
     result_msg = f'На {date.datetime.today().replace(microsecond=0)} ' \
                  f'по игре "{game}" {"статы для текущих игрококов"}:\n'
     for user_name, score in result_dict.items():
-        result_msg += user_name + ': ' + str(score) + '\n'
+        result_msg += user_name + ': ' + str("Register first, please" if not score else score) + '\n'
 
     update.message.reply_text(result_msg)
 

@@ -21,11 +21,20 @@ def get_user_object_by_id(id):
     :return: model.object (row from table) of the user.
     In case when game is not in db - return False
     """
-    try:
-        user_object = CustomUser.objects.get(id=id)
-    except CustomUser.DoesNotExist:
-        user_object = False
-    return user_object
+
+    #  Alternative realization
+    # try:
+    #     user_object = CustomUser.objects.get(id=id)
+    # except CustomUser.DoesNotExist:
+    #     user_object = False
+    # return user_object
+
+    queryset = CustomUser.objects.filter(id=id)
+
+    if queryset.exists():
+        return queryset.first()
+
+    return
 
 
 def get_user_id_by_name(name):
@@ -62,3 +71,15 @@ def add_user_into_db_from_score_pairs(score_pairs: dict):
         else:
             logger.info(f'{username} already in DB')
     return users_id_list
+
+
+def is_users_exist_from_score_pairs(score_pairs: dict):
+    """
+    :param score_pairs:
+    :return: dict with given usernames on keys and boolean depends on registered user in Metrica or not
+    """
+    result_dict = {}
+    for username in score_pairs.keys():
+        is_user_register = CustomUser.objects.filter(username=username).exists()
+        result_dict.update({username: is_user_register})
+    return result_dict

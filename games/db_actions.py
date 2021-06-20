@@ -12,7 +12,7 @@ from dotenv import load_dotenv, find_dotenv
 from users.models import CustomUser
 from .models import Games, GameScores, GameSession
 from .checkup import negative_score_check
-from users.db_actions import get_username_by_id
+from users.db_actions import get_username_by_id, is_users_exist_from_score_pairs
 from users.db_actions import add_user_into_db_from_score_pairs
 from users.db_actions import get_user_object_by_id
 from games.utils import get_default_cover
@@ -194,21 +194,33 @@ def add_scores(game_name, score_pairs: dict):
     game = get_game_object_by_name(game_name)
     if not game:
         return f"Game '{game_name}' isn't tracked by Metrica! Please, register this game first."
-    game_session_object = add_game_session_into_db(game)
-    users_ids = add_user_into_db_from_score_pairs(score_pairs)
-    result_msg_dict = dict()
 
-    for user_id in users_ids:
-        user = get_user_object_by_id(user_id)
-        username = user.username
-        GameScores.objects.create(
-            game_session=game_session_object,
-            user=user,
-            score=score_pairs[username],
-        )
-        result_msg_dict[username] = \
-            GameScores.objects.filter(game_session__game=game).filter(user=user).aggregate(Sum('score'))['score__sum']
-    return result_msg_dict
+    each_user_in_db_check = is_users_exist_from_score_pairs(score_pairs)
+    is_all_users_registered = all(each_user_in_db_check.values())
+
+    if is_all_users_registered:
+        game_session_object = add_game_session_into_db(game)
+        users_ids = add_user_into_db_from_score_pairs(score_pairs)
+        result_msg_dict = dict()
+
+        for user_id in users_ids:
+            user = get_user_object_by_id(user_id)
+            username = user.username
+            GameScores.objects.create(
+                game_session=game_session_object,
+                user=user,
+                score=score_pairs[username],
+            )
+            result_msg_dict[username] = \
+                GameScores.objects.filter(game_session__game=game).filter(user=user).aggregate(Sum('score'))['score__sum']
+        return result_msg_dict
+
+    else:
+        result_msg_dict = {}
+        for username, is_registered in each_user_in_db_check.items():
+            if not is_registered:
+                result_msg_dict.update({username: is_registered})
+        return result_msg_dict
 
 
 def stats_repr(game):

@@ -32,7 +32,9 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="media">
-                            <img class="mr-3" width="75" src="{{ game.cover }}" alt="game cover">
+                            {% if game.cover %}
+                                <img class="mr-3" width="75" src="{{ game.cover }}" alt="game cover">
+                            {% endif %}
                             <div class="media-body">
                                 <h5 class="mt-0">{{ game.name }}</h5>
                                 <p>Played {{ game.times_played }} times with {{ game.total_score }} score total</p>

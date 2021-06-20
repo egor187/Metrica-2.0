@@ -8,7 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.views.generic.list import ListView, View
 from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, UpdateView, FormMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import ExtractIsoWeekDay
 from django.db.models import Sum, Count, F
@@ -25,11 +25,10 @@ import jwt
 
 import users.models
 from games.models import Games, GameSession
-from .forms import CustomUserCreationForm, FeedbackForm, CustomUserAddFriendForm, CustomUserRemoveFriendForm,\
-    FriendshipRequestAcceptForm
+from .forms import CustomUserCreationForm, CustomUserUpdateForm, FeedbackForm, CustomUserAddFriendForm,\
+    CustomUserRemoveFriendForm, FriendshipRequestAcceptForm
 from users.db_actions import add_user_into_db_simple
-from users.utils import get_player_calendar_with_week_day_number, get_player_calendar_with_week_day_name, \
-    get_the_most_played_day
+from users.utils import get_player_calendar_with_week_day_name, get_the_most_played_day
 from .filter import FriendshipRequestFilter
 from .utils import avatar_double_reducer
 
@@ -190,13 +189,21 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
             if not sessions_data:
                 continue
 
-            game_data = {
-                "name": game.name,
-                "cover": game.cover_art.url,
-                "total_score": game.total_score,
-                "times_played": game.times_played,
-                "sessions": sessions_data
-            }
+            if bool(game.cover_art):  # checks for associated file for "cover_art" field (model attr)
+                game_data = {
+                    "name": game.name,
+                    "cover": game.cover_art.url,
+                    "total_score": game.total_score,
+                    "times_played": game.times_played,
+                    "sessions": sessions_data
+                }
+            else:
+                game_data = {
+                    "name": game.name,
+                    "total_score": game.total_score,
+                    "times_played": game.times_played,
+                    "sessions": sessions_data
+                }
             games_data.append(game_data)
 
         context["games"] = games_data
@@ -359,7 +366,7 @@ class UsersCreateView(CreateView):
 
 class UsersUpdateView(LoginRequiredMixin, UpdateView):
     model = users.models.CustomUser
-    form_class = CustomUserCreationForm
+    form_class = CustomUserUpdateForm
     template_name = 'user_update.html'
     success_url = reverse_lazy('users:users_index')
     perm_denied_msg = 'Permission denied. Only owner can change profile'
@@ -370,6 +377,20 @@ class UsersUpdateView(LoginRequiredMixin, UpdateView):
             return HttpResponseRedirect(reverse_lazy('users:users_index'))
         return super().dispatch(request, *args, **kwargs)
 
+
+class PasswordChangeCustomView(PasswordChangeView):
+    """ Inherit built-in auth.views for add functional about user messaging"""
+
+    def get_success_url(self):
+        return reverse_lazy('users:users_detail', args=[self.request.user.id, ])
+
+    def get_context_data(self, **kwargs):
+        """
+        Override for add messages() about successful password change on html
+        """
+        context = super().get_context_data()
+        messages.info(self.request, "New password have been set")
+        return context
 
 # Realization with vanilla View through adding friend to CustomUser instance
 # class FriendAddView(View):

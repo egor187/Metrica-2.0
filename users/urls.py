@@ -27,6 +27,12 @@ urlpatterns = [
     path('friends/add/<int:pk>/', views.FriendAddView.as_view(), name='friend_add'),
     path('friends/remove/<int:pk>/', views.FriendRemoveView.as_view(), name='friend_remove'),
 
+    path(
+        'update/password/',
+        views.PasswordChangeCustomView.as_view(template_name="password_update.html"),
+        name='password_update'
+    ),
+
     # create and update user profile by tg link
     path('add_user/', views.add_user_view_through_tg_bot, name='add_user_from_bot'),
     path('reg_cont/<int:pk>/' + str(uuid.uuid4()), views.UserUpdateViewFromBot.as_view(), name='reg_cont'),
