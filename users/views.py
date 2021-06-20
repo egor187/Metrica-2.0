@@ -597,14 +597,17 @@ def add_user_view_through_tg_bot(request):
     if request.method == 'POST':
         request_raw = request.body
         request_json = json.loads(request_raw)
-        user = request_json['user']
-        new_user_pk = add_user_into_db_simple(user)
+        user_name = request_json['user']
+        user_tuple = add_user_into_db_simple(user_name)
+        is_new_user = user_tuple[1]
+        user_pk = user_tuple[0].pk
+
 
     return HttpResponse(
-        f"Ссылка на Ваш аккаунт: {site_root_url}{str(reverse_lazy('users:reg_cont', args=[new_user_pk]))}"
-    ) if new_user_pk else HttpResponse(
+        f"Ссылка на Ваш аккаунт: {site_root_url}{str(reverse_lazy('users:reg_cont', args=[user_pk]))}"
+    ) if is_new_user else HttpResponse(
         f"Вы уже зарегистрированы. "
-        f"Можете перейти на сайт по этой ссылке {request.build_absolute_uri(reverse_lazy('index'))}"
+        f"Перейдите на сайт по ссылке {request.build_absolute_uri(reverse_lazy('users:users_detail', args=[user_pk]))}"
     )
 
 

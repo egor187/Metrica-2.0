@@ -49,12 +49,12 @@ def get_user_id_by_name(name):
 
 
 def add_user_into_db_simple(username):
-    user = CustomUser.objects.get_or_create(username=username)
-    if user[1]:
+    user_tuple = CustomUser.objects.get_or_create(username=username)
+    if user_tuple[1]:
         logger.info(f'New user "{username}" added to db. WELCOME!')
-        return user[0].pk
     logger.info(f'User "{username}" already in db. Welcome back!')
-    return
+
+    return user_tuple
 
 
 def add_user_into_db_from_score_pairs(score_pairs: dict):
