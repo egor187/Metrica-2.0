@@ -28,12 +28,8 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Game</th>
-                    {% comment %}<th scope="col">Sessions</th>{% endcomment %}
-                    {% if user.is_staff %}
-                        <th scope="col">Quantity </th>
-                    {% endif %}
-                    <th scope="col">Players</th>
-                    <th scope="col">Scores</th>
+                    <th scope="col">Total played sessions</th>
+                    <th scope="col">Top 3 players of the month</th>
                 </tr>
                 </thead>
 
@@ -44,44 +40,14 @@
                         <td>
                             <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
                         </td>
-
-{% comment 'Duplication depend on model' %}
                         <td>
-                            <ol class="list-unstyled">
-                                {% for session in game.sessions.all %}
-                                    <li>{{ session.created_at }}</li>
-                                {% endfor %}
-                            </ol>
+                            {{ game.sessions.all.count }}
                         </td>
-{% endcomment %}
-
                         <td>
-                            {% if user.is_staff %}
-                                {{ game.sessions.all.count }}
-                            {% endif %}
-                        </td>
-
-
-                        <td>
-                            {% for session in game.sessions.all %}
-                                {% if not session.is_private %}
-                                    {% for score in session.scores.all %}
-                                        {{ score.user }}
-                                    {% endfor %}
-                                {% endif %}
+                            {% for player in game.get_top_3_month_players %}
+                                <p>{{ forloop.counter }}. {{ player.username }}</p>
                             {% endfor %}
                         </td>
-
-                        <td>
-                            {% for session in game.sessions.all %}
-                                {% if not session.is_private %}
-                                    {% for score in session.scores.all %}
-                                        {{ score.score }},
-                                    {% endfor %}
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-
                     </tr>
                 {% endfor %}
                 </tbody>

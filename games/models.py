@@ -1,5 +1,8 @@
+import datetime
+
 from django.db import models
 from django.core.validators import validate_image_file_extension
+from django.db.models import Sum
 from django.urls import reverse
 from users.models import CustomUser
 
@@ -18,6 +21,23 @@ class Games(models.Model):
 
     def get_absolute_url(self):
         return reverse('games:games_detail', args=[self.pk])
+
+    def get_top_3_month_players(self):
+        period_in_weeks = 4
+        game_name = self.name
+        now = datetime.datetime.now()
+        before = datetime.timedelta(weeks=period_in_weeks)
+        period = now - before
+
+        all_user_score = CustomUser.objects.filter(
+            scores__game_session__is_private=False,
+            scores__game_session__created_at__gte=period,
+            scores__game_session__game__name=game_name
+        ).distinct()
+
+        result = all_user_score.annotate(total=Sum("scores__score")).order_by("-total")[:3]
+
+        return result
 
 
 class GameSession(models.Model):
