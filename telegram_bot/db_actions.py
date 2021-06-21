@@ -180,13 +180,13 @@ def top_3_week_players_repr_public_sessions(game_name: str, period_in_weeks):
     period = now - before
 
     if ALL_GAMES.filter(name=game_name):
-        query = GameScores.objects.filter(
-            game_session__is_private=False,
-            game_session__game__name=game_name,
-            game_session__created_at__gte=period
-        ).order_by('-score')[:3]
+        query = CustomUser.objects.filter(
+            scores__game_session__is_private=False,
+            scores__game_session__created_at__gte=period,
+            scores__game_session__game__name=game_name
+        ).distinct().annotate(total=Sum("scores__score")).order_by("-total")[:3]
 
-        top_players_list = query.values_list('user__username', 'score')
+        top_players_list = query.values_list('username', 'total')
         msg = ''
         for elem in top_players_list:
             msg += f"'{str(elem[0])}' with score {str(elem[1])}, \n"
