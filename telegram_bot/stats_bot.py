@@ -67,6 +67,7 @@ class StatsBot:
             )
         )
         self.dispatcher.add_handler(MessageHandler(Filters.animation | Filters.sticker, animation_callback))
+        self.dispatcher.add_handler(MessageHandler(~Filters.animation | ~Filters.sticker, linter))
 
     def process_update(self, request):
         update = Update.de_json(request, self.bot)
@@ -75,7 +76,6 @@ class StatsBot:
         logger.debug(f'Stats request processed successfully: {update.update_id}')
         chat_id = update.effective_chat.id
         Chat.objects.get_or_create(chat_id=chat_id)
-        linter(update)
 
 
 def animation_callback(update, context):
@@ -92,7 +92,7 @@ def add_game_command(update, context):
         reply_markup=ForceReply())
 
 
-def linter(update):
+def linter(update, context):
     """
     Spell check chat messages
     """

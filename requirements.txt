@@ -49,9 +49,9 @@ click==7.1.2; python_version >= "3.6" and python_full_version < "3.0.0" or pytho
 colorama==0.4.4; python_version >= "3.6" and python_full_version < "3.0.0" and sys_platform == "win32" or sys_platform == "win32" and python_version >= "3.6" and python_full_version >= "3.5.0" \
     --hash=sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2 \
     --hash=sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b
-django-anymail==8.3; python_version >= "3.5" \
-    --hash=sha256:fde346365937de91feee4451cbbf416f4af841ccc5d136c5fdfcb983827703c1 \
-    --hash=sha256:caba487937d14d7d6ff06551db4e4bfb3e45eff892f9911abd7a214716b65be5
+django-anymail==8.4; python_version >= "3.5" \
+    --hash=sha256:671a338de43b8e414d48c6d16aac1df54d2f24f916e1073f9f60aef5acffaf89 \
+    --hash=sha256:2e8307e84f0a12f9283469017094a8246db9a0fc608ac17dd1027ee011ece986
 django-bootstrap4==2.3.1; python_version >= "3.6" and python_version < "4.0" \
     --hash=sha256:2c199020ac38866cdf8d1c5561ce7468116b9685b455a29843c0225ef8568879 \
     --hash=sha256:b68f073b647b20ec7894a252a0ca4e06b7b8dafdbad995cb0cdc783d0bb4629d
@@ -160,6 +160,9 @@ pyjwt==2.0.1; python_version >= "3.6" \
 pyparsing==2.4.7; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6" \
     --hash=sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b \
     --hash=sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1
+pyspellchecker==0.6.2 \
+    --hash=sha256:218759d4166fd49dee5c0473da99792d9274aca495ded0d9594a0bd75e2831ca \
+    --hash=sha256:af6a1d0393a175499475a873f31e52135f1efd5fc912c979101b795b3c2ee77f
 pytest==6.2.3; python_version >= "3.6" \
     --hash=sha256:6ad9c7bdf517a808242b998ac20063c41532a570d088d77eec1ee12b0b5574bc \
     --hash=sha256:671238a46e4df0f3498d1c3270e5deb9b32d25134c99b7d75370a68cfbe9b634
