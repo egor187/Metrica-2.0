@@ -33,6 +33,7 @@ pytest = "^6.2.3"
 celery = "^5.0.5"
 boto3 = "^1.17.89"
 django-storages = "^1.11.1"
+pyspellchecker = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 

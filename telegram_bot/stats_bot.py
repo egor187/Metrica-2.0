@@ -3,6 +3,7 @@ from django.conf import settings
 import requests
 import datetime as date
 import logging
+from spellchecker import SpellChecker
 
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
@@ -74,6 +75,7 @@ class StatsBot:
         logger.debug(f'Stats request processed successfully: {update.update_id}')
         chat_id = update.effective_chat.id
         Chat.objects.get_or_create(chat_id=chat_id)
+        linter(update)
 
 
 def animation_callback(update, context):
@@ -88,6 +90,18 @@ def add_game_command(update, context):
     update.message.reply_text(
         f'Добавить игру',
         reply_markup=ForceReply())
+
+
+def linter(update):
+    """
+    Spell check chat messages
+    """
+    spell = SpellChecker(language='ru')
+    sentence = update.message.text
+    words_list = spell.split_words(sentence)
+    mistakes_set = spell.unknown(words_list)
+    if mistakes_set:
+        update.message.reply_text(f" Ну что бля за '{', '.join(list(mistakes_set))}'?")
 
 
 def process_add_game_command(update, context):
